@@ -178,6 +178,9 @@ class CChan:
         elif self.data_src == DATA_SRC.CSV:
             from DataAPI.csvAPI import CSV_API
             _dict[DATA_SRC.CSV] = CSV_API
+        elif self.data_src == DATA_SRC.PD:
+            from DataAPI.pdAPI import PD_API
+            _dict[DATA_SRC.PD] = PD_API
         if self.data_src in _dict:
             return _dict[self.data_src]
         assert isinstance(self.data_src, str)
