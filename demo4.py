@@ -113,7 +113,7 @@ if __name__ == "__main__":
     feature_meta = {}  # 特征meta
     cur_feature_idx = 0
     plot_marker = {}
-    fid = open("feature.libsvm_4", "w")
+    fid = open("feature.libsvm", "w")
     for bsp_klu_idx, feature_info in bsp_dict.items():
         label = int(bsp_klu_idx in bsp_academy)  # 以买卖点识别是否准确为label
         features = []  # List[(idx, value)]
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         plot_marker[feature_info["open_time"].to_str()] = ("√" if label else "×", "down" if feature_info["is_buy"] else "up")
     fid.close()
 
-    with open("feature.meta_4", "w") as fid:
+    with open("feature.meta", "w") as fid:
         # meta保存下来，实盘预测时特征对齐用
         fid.write(json.dumps(feature_meta))
 
@@ -147,10 +147,10 @@ if __name__ == "__main__":
         evals_result=evals_result,
         verbose_eval=True,
     )
-    bst.save_model("model4.json")
+    bst.save_model("model.json")
 
     # load model
     model = xgb.Booster()
-    model.load_model("model4.json")
+    model.load_model("model.json")
     # predict
     print(model.predict(dtrain))
