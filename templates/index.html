@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Training Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .status-message {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Model Training Status</h1>
+    <div id="status-messages">
+        {% for message in status_messages %}
+            <div class="status-message">{{ message }}</div>
+        {% endfor %}
+    </div>
+    <script>
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusMessagesDiv = document.getElementById('status-messages');
+                    statusMessagesDiv.innerHTML = '';
+                    data.forEach(message => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'status-message';
+                        messageDiv.textContent = message;
+                        statusMessagesDiv.appendChild(messageDiv);
+                    });
+                });
+        }
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>
