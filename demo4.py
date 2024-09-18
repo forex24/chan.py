@@ -58,7 +58,7 @@ if __name__ == "__main__":
     """
     code = "eurusd"
     begin_time = "2020-01-01"
-    end_time = "2020-02-1" 
+    end_time = "2020-03-01" 
     data_src = DATA_SRC.PD
     lv_list = [KL_TYPE.K_1M]
 
