@@ -65,7 +65,7 @@ class PD_API(CCommonStockApi):
             raise CChanException(f"file not exist: {file_path}", ErrCode.SRC_DATA_NOT_FOUND)
         
         fields = "timestamp,open,high,low,close"
-        df = pd.read_parquet(file_path)
+        df = pd.read_parquet(file_path, engine='fastparquet')
         
         # 确保 DataFrame 的索引是 datetime 类型
         df.index = pd.to_datetime(df.index)

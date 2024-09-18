@@ -49,7 +49,7 @@ class CSV_API(CCommonStockApi):
             DATA_FIELD.FIELD_HIGH,
             DATA_FIELD.FIELD_LOW,
             DATA_FIELD.FIELD_CLOSE,
-            # DATA_FIELD.FIELD_VOLUME,
+            DATA_FIELD.FIELD_VOLUME,
             # DATA_FIELD.FIELD_TURNOVER,
             # DATA_FIELD.FIELD_TURNRATE,
         ]  # 每一列字段
@@ -58,7 +58,7 @@ class CSV_API(CCommonStockApi):
 
     def get_kl_data(self):
         cur_path = os.path.dirname(os.path.realpath(__file__))
-        file_path = f"{cur_path}/../{self.code}.csv"
+        file_path = f"{cur_path}/{self.code}.csv"
         if not os.path.exists(file_path):
             raise CChanException(f"file not exist: {file_path}", ErrCode.SRC_DATA_NOT_FOUND)
 
