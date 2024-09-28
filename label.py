@@ -10,9 +10,7 @@ from Plot.PlotDriver import CPlotDriver
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-import os
-import threading
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, cpu_count
 
 class T_SAMPLE_INFO(TypedDict):
     feature: CFeatures
@@ -135,21 +133,27 @@ def label(symbol, start, end):
     #plot(chan, plot_marker)
 
 def main(symbol, start_year):
-    multi_work = Parallel(n_jobs=8, backend='loky')
+    # 获取当前系统的cpu核心数
+    n_cores = cpu_count()
+    print(f'系统的核心数是：{n_cores}')
+
+    multi_work = Parallel(n_jobs=n_cores, backend='loky')
     tasks = []
 
     end_year = datetime.now().year
     for year in range(start_year, end_year+1):
-        start = datetime(year, 1, 1)
-        real_start = start - relativedelta(months=1)
-        next_start = start + relativedelta(years=1)
-        real_end = next_start + relativedelta(months=1)
-        print('label from:' + str(real_start) +' to:' + str(real_end))
-        tasks.append(delayed(label)(symbol, real_start, real_end))
+        for quarter in range(0,3):
+            start = datetime(year, quarter*3 + 1, 1)
+            real_start = start - relativedelta(days=3)
+            next_start = start + relativedelta(months=3)
+            real_end = next_start + relativedelta(days=3)
+            print('label from:' + str(real_start) +' to:' + str(real_end))
+            tasks.append(delayed(label)(symbol, real_start, real_end))
+
 
     res = multi_work(tasks)
     print(res)
     
 
 if __name__ == "__main__":
-    main('eurusd', 2001)
+    main('eurusd', 2000)
