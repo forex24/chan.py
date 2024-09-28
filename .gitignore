@@ -4,6 +4,8 @@ __pycache__
 *.vscode
 *.log
 *.db
+*.csv
+*.parquet
 config.yaml
 OpenConfig.yaml
 gotify_push.py
