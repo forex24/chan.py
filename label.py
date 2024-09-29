@@ -48,8 +48,13 @@ def stragety_feature(last_klu):
         "open_klu_rate": (last_klu.close - last_klu.open)/last_klu.open,
     }
 
-
 def label(symbol, start, end):
+    try:
+        chan_lab(symbol, start, end)
+    except:
+        pass
+
+def chan_lab(symbol, start, end):
     """
     对输入数据打标策略产出的买卖点的特征
     """
@@ -142,7 +147,7 @@ def main(symbol, start_year):
 
     end_year = datetime.now().year
     for year in range(start_year, end_year+1):
-        for quarter in range(0,3):
+        for quarter in range(0,4):
             start = datetime(year, quarter*3 + 1, 1)
             real_start = start - relativedelta(days=3)
             next_start = start + relativedelta(months=3)

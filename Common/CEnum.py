@@ -6,7 +6,7 @@ class DATA_SRC(Enum):
     BAO_STOCK = auto()
     CCXT = auto()
     CSV = auto()
-    PD = auto()
+    DATAFRAME = auto()
 
 
 class KL_TYPE(Enum):

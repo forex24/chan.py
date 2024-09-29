@@ -44,12 +44,12 @@ class CSV_API(CCommonStockApi):
     def __init__(self, code, k_type=KL_TYPE.K_DAY, begin_date=None, end_date=None, autype=None):
         self.headers_exist = True  # 第一行是否是标题，如果是数据，设置为False
         self.columns = [
-            DATA_FIELD.FIELD_TIME,
             DATA_FIELD.FIELD_OPEN,
             DATA_FIELD.FIELD_HIGH,
             DATA_FIELD.FIELD_LOW,
             DATA_FIELD.FIELD_CLOSE,
             DATA_FIELD.FIELD_VOLUME,
+            DATA_FIELD.FIELD_TIME,
             # DATA_FIELD.FIELD_TURNOVER,
             # DATA_FIELD.FIELD_TURNRATE,
         ]  # 每一列字段

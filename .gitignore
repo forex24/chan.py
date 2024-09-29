@@ -6,6 +6,8 @@ __pycache__
 *.db
 *.csv
 *.parquet
+*.libsvm
+*.meta
 config.yaml
 OpenConfig.yaml
 gotify_push.py
