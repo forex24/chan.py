@@ -1,5 +1,10 @@
 import json
 from typing import Dict, TypedDict
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from joblib import Parallel, delayed, cpu_count
+import pandas as pd
+import sys
 
 from Chan import CChan
 from ChanConfig import CChanConfig
@@ -7,11 +12,6 @@ from ChanModel.Features import CFeatures
 from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
 from Common.CTime import CTime
 from Plot.PlotDriver import CPlotDriver
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-
-from joblib import Parallel, delayed, cpu_count
-import pandas as pd
 
 class T_SAMPLE_INFO(TypedDict):
     feature: CFeatures
@@ -45,17 +45,16 @@ def plot(chan, plot_marker):
     )
     plot_driver.save2img("label.png")
 
-
 def stragety_feature(last_klu):
     return {
-        "open_klu_rate": (last_klu.close - last_klu.open)/last_klu.open,
+        "open_klu_rate": (last_klu.close - last_klu.open) / last_klu.open,
     }
 
 def label(symbol, start, end):
     try:
         chan_lab(symbol, start, end)
-    except:
-        pass
+    except Exception as e:
+        print(f"Error processing {symbol} from {start} to {end}: {e}")
 
 def chan_lab(symbol, start, end):
     """
@@ -119,41 +118,38 @@ def chan_lab(symbol, start, end):
     feature_meta = {}  # 特征meta
     cur_feature_idx = 0
     plot_marker = {}
-    fname = "feature_"+start.strftime("%Y_%m_%d")+"_"+end.strftime("%Y_%m_%d")
-    fid = open(f"{fname}.libsvm", "w")
-    df_all = pd.DataFrame()
-    for bsp_klu_idx, feature_info in bsp_dict.items():
-        pd_features = {}
-        label = int(bsp_klu_idx in bsp_academy)  # 以买卖点识别是否准确为label
-        pd_features['open_time'] = CTime_to_datetime(feature_info['open_time'])
-        pd_features['bsp_type'] = feature_info['bsp_type']
-        pd_features['is_buy'] = feature_info['is_buy']
-        features = []  # List[(idx, value)]
-        for feature_name, value in feature_info['feature'].items():
-            if feature_name not in feature_meta:
-                feature_meta[feature_name] = cur_feature_idx
-                cur_feature_idx += 1
-            features.append((feature_meta[feature_name], value))
-            pd_features[feature_name]=value
-            print(pd_features)
-        features.sort(key=lambda x: x[0])
-        feature_str = " ".join([f"{idx}:{value}" for idx, value in features])
-        fid.write(f"{label} {feature_str}\n")
-        pd_features['label'] =label
-        df = pd.DataFrame(pd_features, index=[0])
-        print(df)
-        df_all = pd.concat([df_all, df], ignore_index=True)
-        plot_marker[feature_info["open_time"].to_str()] = ("√" if label else "×", "down" if feature_info["is_buy"] else "up")
-    fid.close()
-    print(df_all)
-    df_all.to_csv(f"{fname}.csv", index=False)
+    fname = f"feature_{start.strftime('%Y_%m_%d')}_{end.strftime('%Y_%m_%d')}"
+    with open(f"{fname}.libsvm", "w") as fid:
+        df_all = pd.DataFrame()
+        for bsp_klu_idx, feature_info in bsp_dict.items():
+            pd_features = {}
+            label = int(bsp_klu_idx in bsp_academy)  # 以买卖点识别是否准确为label
+            pd_features['open_time'] = CTime_to_datetime(feature_info['open_time'])
+            pd_features['bsp_type'] = feature_info['bsp_type']
+            pd_features['is_buy'] = feature_info['is_buy']
+            features = []  # List[(idx, value)]
+            for feature_name, value in feature_info['feature'].items():
+                if feature_name not in feature_meta:
+                    feature_meta[feature_name] = cur_feature_idx
+                    cur_feature_idx += 1
+                features.append((feature_meta[feature_name], value))
+                pd_features[feature_name] = value
+            features.sort(key=lambda x: x[0])
+            feature_str = " ".join([f"{idx}:{value}" for idx, value in features])
+            fid.write(f"{label} {feature_str}\n")
+            pd_features['label'] = label
+            df = pd.DataFrame(pd_features, index=[0])
+            df_all = pd.concat([df_all, df], ignore_index=True)
+            plot_marker[feature_info["open_time"].to_str()] = ("√" if label else "×", "down" if feature_info["is_buy"] else "up")
 
-    with open("feature_"+start.strftime("%Y_%m_%d")+"_"+end.strftime("%Y_%m_%d")+".meta", "w") as fid:
+        df_all.to_csv(f"{fname}.csv", index=False)
+
+    with open(f"{fname}.meta", "w") as fid:
         # meta保存下来，实盘预测时特征对齐用
         fid.write(json.dumps(feature_meta))
 
     # 画图检查label是否正确
-    #plot(chan, plot_marker)
+    # plot(chan, plot_marker)
 
 def main(symbol, start_year):
     # 获取当前系统的cpu核心数
@@ -164,20 +160,29 @@ def main(symbol, start_year):
     tasks = []
 
     end_year = datetime.now().year
-    for year in range(start_year, end_year+1):
-        for quarter in range(0,4):
-            start = datetime(year, quarter*3 + 1, 1)
+    for year in range(start_year, end_year + 1):
+        for quarter in range(0, 4):
+            start = datetime(year, quarter * 3 + 1, 1)
             real_start = start - relativedelta(days=3)
             next_start = start + relativedelta(months=3)
             real_end = next_start + relativedelta(days=3)
-            print('label from:' + str(real_start) +' to:' + str(real_end))
+            print('label from:' + str(real_start) + ' to:' + str(real_end))
             tasks.append(delayed(label)(symbol, real_start, real_end))
-
 
     res = multi_work(tasks)
     print(res)
-    
 
 if __name__ == "__main__":
-    main('eurusd', 2000)
-    #chan_lab('eurusd', datetime(2001,1,1), datetime(2001,1,15))
+    # 获取命令行参数，默认为 'eurusd'
+    if len(sys.argv) > 1:
+        symbol = sys.argv[1].lower()
+    else:
+        symbol = 'eurusd'
+
+    # 获取起始年份，默认为 2000
+    if len(sys.argv) > 2:
+        start_year = int(sys.argv[2])
+    else:
+        start_year = 2000
+
+    main(symbol, start_year)
