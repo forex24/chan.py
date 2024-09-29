@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from joblib import Parallel, delayed, cpu_count
 import pandas as pd
 import sys
+import os
 
 from Chan import CChan
 from ChanConfig import CChanConfig
@@ -118,7 +119,7 @@ def chan_lab(symbol, start, end):
     feature_meta = {}  # 特征meta
     cur_feature_idx = 0
     plot_marker = {}
-    fname = f"feature_{start.strftime('%Y_%m_%d')}_{end.strftime('%Y_%m_%d')}"
+    fname = f"{symbol}_feature_{start.strftime('%Y_%m_%d')}_{end.strftime('%Y_%m_%d')}"
     with open(f"{fname}.libsvm", "w") as fid:
         df_all = pd.DataFrame()
         for bsp_klu_idx, feature_info in bsp_dict.items():
@@ -171,6 +172,35 @@ def main(symbol, start_year):
 
     res = multi_work(tasks)
     print(res)
+
+    # 读取同一个symbol产生的所有feature的csv文件，合并后去重保存为带symbol前缀的symbol_features.csv
+    combined_df = pd.DataFrame()
+    for filename in os.listdir('.'):
+        if filename.startswith(f"{symbol}_feature_") and filename.endswith('.csv'):
+            file_path = os.path.join('.', filename)
+            df = pd.read_csv(file_path)
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+
+    # 去重
+    combined_df.drop_duplicates(inplace=True)
+
+    # 检查 open_time 列中是否存在重复
+    duplicates_in_open_time = combined_df[combined_df.duplicated('open_time', keep=False)]
+
+    # 打印结果
+    if duplicates_in_open_time.empty:
+        print("No duplicates found in 'open_time' column.")
+    else:
+        print("Duplicates found in 'open_time' column:")
+        print(duplicates_in_open_time)
+
+        # 将重复项写入后缀为duplicate的csv文件里
+        duplicates_in_open_time.to_csv(f"{symbol}_features_duplicate.csv", index=False)
+        print(f"Duplicates have been written to {symbol}_features_duplicate.csv")
+
+    # 保存去重后的 DataFrame
+    combined_df.to_csv(f"{symbol}_features.csv", index=False)
+    print(f"Combined DataFrame has been written to {symbol}_features.csv")
 
 if __name__ == "__main__":
     # 获取命令行参数，默认为 'eurusd'
