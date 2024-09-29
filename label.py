@@ -11,12 +11,15 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from joblib import Parallel, delayed, cpu_count
+import pandas as pd
 
 class T_SAMPLE_INFO(TypedDict):
     feature: CFeatures
     is_buy: bool
     open_time: CTime
 
+def CTime_to_datetime(ctime):
+    return datetime(ctime.year, ctime.month, ctime.day, ctime.hour, ctime.minute, ctime.second)
 
 def plot(chan, plot_marker):
     plot_config = {
@@ -106,29 +109,44 @@ def chan_lab(symbol, start, end):
                 "feature": last_bsp.features,
                 "is_buy": last_bsp.is_buy,
                 "open_time": last_klu.time,
+                "bsp_type": last_bsp.type2str()
             }
             bsp_dict[last_bsp.klu.idx]['feature'].add_feat(stragety_feature(last_klu))  # 开仓K线特征
-            print(last_bsp.klu.time, last_bsp.is_buy)
+            print(last_bsp.klu.time, last_bsp.is_buy, last_bsp.type2str())
 
     # 生成libsvm样本特征
     bsp_academy = [bsp.klu.idx for bsp in chan.get_bsp()]
     feature_meta = {}  # 特征meta
     cur_feature_idx = 0
     plot_marker = {}
-    fid = open("feature_"+start.strftime("%Y_%m_%d")+"_"+end.strftime("%Y_%m_%d")+".libsvm", "w")
+    fname = "feature_"+start.strftime("%Y_%m_%d")+"_"+end.strftime("%Y_%m_%d")
+    fid = open(f"{fname}.libsvm", "w")
+    df_all = pd.DataFrame()
     for bsp_klu_idx, feature_info in bsp_dict.items():
+        pd_features = {}
         label = int(bsp_klu_idx in bsp_academy)  # 以买卖点识别是否准确为label
+        pd_features['open_time'] = CTime_to_datetime(feature_info['open_time'])
+        pd_features['bsp_type'] = feature_info['bsp_type']
+        pd_features['is_buy'] = feature_info['is_buy']
         features = []  # List[(idx, value)]
         for feature_name, value in feature_info['feature'].items():
             if feature_name not in feature_meta:
                 feature_meta[feature_name] = cur_feature_idx
                 cur_feature_idx += 1
             features.append((feature_meta[feature_name], value))
+            pd_features[feature_name]=value
+            print(pd_features)
         features.sort(key=lambda x: x[0])
         feature_str = " ".join([f"{idx}:{value}" for idx, value in features])
         fid.write(f"{label} {feature_str}\n")
+        pd_features['label'] =label
+        df = pd.DataFrame(pd_features, index=[0])
+        print(df)
+        df_all = pd.concat([df_all, df], ignore_index=True)
         plot_marker[feature_info["open_time"].to_str()] = ("√" if label else "×", "down" if feature_info["is_buy"] else "up")
     fid.close()
+    print(df_all)
+    df_all.to_csv(f"{fname}.csv", index=False)
 
     with open("feature_"+start.strftime("%Y_%m_%d")+"_"+end.strftime("%Y_%m_%d")+".meta", "w") as fid:
         # meta保存下来，实盘预测时特征对齐用
@@ -162,3 +180,4 @@ def main(symbol, start_year):
 
 if __name__ == "__main__":
     main('eurusd', 2000)
+    #chan_lab('eurusd', datetime(2001,1,1), datetime(2001,1,15))
