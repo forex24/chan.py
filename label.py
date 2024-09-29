@@ -13,14 +13,77 @@ from ChanModel.Features import CFeatures
 from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
 from Common.CTime import CTime
 from Plot.PlotDriver import CPlotDriver
+from pathlib import Path
+
+def mkdir_p(path):
+    import errno
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 class T_SAMPLE_INFO(TypedDict):
     feature: CFeatures
     is_buy: bool
     open_time: CTime
+    bsp_type: str
 
 def CTime_to_datetime(ctime):
     return datetime(ctime.year, ctime.month, ctime.day, ctime.hour, ctime.minute, ctime.second)
+
+def check_dup(directory):
+    # 查找目录下有多少个不同的 symbol
+    symbols = set()
+    for filename in os.listdir(directory):
+        if filename.endswith('.csv'):
+            symbol = filename.split('_')[0]
+            symbols.add(symbol)
+    
+    # 对每个 symbol 进行处理
+    for symbol in symbols:
+        # 初始化一个空的 DataFrame
+        combined_df = pd.DataFrame()
+    
+        # 遍历目录下的所有文件
+        for filename in os.listdir(directory):
+            if filename.startswith(f'{symbol}_feature') and filename.endswith('.csv'):
+                file_path = os.path.join(directory, filename)
+                # 读取 CSV 文件
+                df = pd.read_csv(file_path)
+                # 将读取的 DataFrame 拼接到 combined_df 中
+                combined_df = pd.concat([combined_df, df], ignore_index=True)
+    
+        # 去重
+        combined_df.drop_duplicates(inplace=True)
+        combined_df = combined_df.sort_values(by='open_time')
+        col = combined_df.pop('label')
+        combined_df.insert(loc= 0 , column= 'label', value= col)
+    
+        # 检查 open_time 列中是否存在重复
+        duplicates_in_open_time = combined_df[combined_df.duplicated('open_time', keep=False)]
+    
+        # 打印结果
+        if duplicates_in_open_time.empty:
+            print(f"No duplicates found in 'open_time' column for symbol {symbol}.")
+        else:
+            print(f"Duplicates found in 'open_time' column for symbol {symbol}:")
+            print(duplicates_in_open_time)
+            duplicates_in_open_time = duplicates_in_open_time.sort_values(by='open_time')
+    
+            # 将重复项写入 "{symbol}_all_dup.csv"
+            dup_file_path = os.path.join(directory, f'{symbol}_all_dup.csv')
+            duplicates_in_open_time.to_csv(dup_file_path, index=False)
+            print(f"Duplicates for symbol {symbol} have been written to {dup_file_path}")
+    
+        # 将去重后的 DataFrame 写入 "{symbol}_all_feature.csv"
+        directory = Path(directory).parent.absolute()
+        output_file_path = os.path.join(directory, f'{symbol}_all_feature.csv')
+        combined_df.to_csv(output_file_path, index=False)
+        print(f"Combined DataFrame for symbol {symbol} has been written to {output_file_path}")
+
 
 def plot(chan, plot_marker):
     plot_config = {
@@ -51,19 +114,19 @@ def stragety_feature(last_klu):
         "open_klu_rate": (last_klu.close - last_klu.open) / last_klu.open,
     }
 
-def label(symbol, start, end):
+def label(base_path, symbol, start, end):
     try:
-        chan_lab(symbol, start, end)
+        chan_lab(base_path, symbol, start, end)
     except Exception as e:
         print(f"Error processing {symbol} from {start} to {end}: {e}")
 
-def chan_lab(symbol, start, end):
+def chan_lab(base_path, symbol, start, end):
     """
     对输入数据打标策略产出的买卖点的特征
     """
     code = symbol
-    begin_time = start
-    end_time = end
+    begin_time = start - relativedelta(months=1)
+    end_time = end + - relativedelta(months=1)
     data_src = DATA_SRC.CSV
     lv_list = [KL_TYPE.K_1M]
 
@@ -120,7 +183,8 @@ def chan_lab(symbol, start, end):
     cur_feature_idx = 0
     plot_marker = {}
     fname = f"{symbol}_feature_{start.strftime('%Y_%m_%d')}_{end.strftime('%Y_%m_%d')}"
-    with open(f"{fname}.libsvm", "w") as fid:
+    libsvm_filename = os.path.join(base_path, f"{fname}.libsvm")
+    with open(libsvm_filename, "w") as fid:
         df_all = pd.DataFrame()
         for bsp_klu_idx, feature_info in bsp_dict.items():
             pd_features = {}
@@ -143,9 +207,12 @@ def chan_lab(symbol, start, end):
             df_all = pd.concat([df_all, df], ignore_index=True)
             plot_marker[feature_info["open_time"].to_str()] = ("√" if label else "×", "down" if feature_info["is_buy"] else "up")
 
-        df_all.to_csv(f"{fname}.csv", index=False)
+        csv_filename = os.path.join(base_path, f"{fname}.csv")
+        df_clear = df_all.drop(df[(df['open_time']<start) | (df['open_time']>end)].index)
+        df_clear.to_csv(csv_filename, index=False)
 
-    with open(f"{fname}.meta", "w") as fid:
+    mata_filename = os.path.join(base_path, f"{fname}.meta")
+    with open(mata_filename, "w") as fid:
         # meta保存下来，实盘预测时特征对齐用
         fid.write(json.dumps(feature_meta))
 
@@ -157,50 +224,24 @@ def main(symbol, start_year):
     n_cores = cpu_count()
     print(f'系统的核心数是：{n_cores}')
 
+
+    base_path = 'features'
+    base_path = os.path.join(os.getcwd(), base_path, symbol)
+    mkdir_p(base_path)
+
     multi_work = Parallel(n_jobs=n_cores, backend='loky')
     tasks = []
 
     end_year = datetime.now().year
     for year in range(start_year, end_year + 1):
-        for quarter in range(0, 4):
-            start = datetime(year, quarter * 3 + 1, 1)
-            real_start = start - relativedelta(days=3)
-            next_start = start + relativedelta(months=3)
-            real_end = next_start + relativedelta(days=3)
-            print('label from:' + str(real_start) + ' to:' + str(real_end))
-            tasks.append(delayed(label)(symbol, real_start, real_end))
+        #for quarter in range(0, 4):
+        start = datetime(year, 1, 1)
+        end = start +  relativedelta(months=13)
+        print('label from:' + str(start) + ' to:' + str(end))
+        tasks.append(delayed(label)(base_path, symbol, start, end))
 
     res = multi_work(tasks)
-    print(res)
-
-    # 读取同一个symbol产生的所有feature的csv文件，合并后去重保存为带symbol前缀的symbol_features.csv
-    combined_df = pd.DataFrame()
-    for filename in os.listdir('.'):
-        if filename.startswith(f"{symbol}_feature_") and filename.endswith('.csv'):
-            file_path = os.path.join('.', filename)
-            df = pd.read_csv(file_path)
-            combined_df = pd.concat([combined_df, df], ignore_index=True)
-
-    # 去重
-    combined_df.drop_duplicates(inplace=True)
-
-    # 检查 open_time 列中是否存在重复
-    duplicates_in_open_time = combined_df[combined_df.duplicated('open_time', keep=False)]
-
-    # 打印结果
-    if duplicates_in_open_time.empty:
-        print("No duplicates found in 'open_time' column.")
-    else:
-        print("Duplicates found in 'open_time' column:")
-        print(duplicates_in_open_time)
-
-        # 将重复项写入后缀为duplicate的csv文件里
-        duplicates_in_open_time.to_csv(f"{symbol}_features_duplicate.csv", index=False)
-        print(f"Duplicates have been written to {symbol}_features_duplicate.csv")
-
-    # 保存去重后的 DataFrame
-    combined_df.to_csv(f"{symbol}_features.csv", index=False)
-    print(f"Combined DataFrame has been written to {symbol}_features.csv")
+    check_dup(base_path)
 
 if __name__ == "__main__":
     # 获取命令行参数，默认为 'eurusd'
