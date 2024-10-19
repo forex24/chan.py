@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug, Clone)]
-struct CTradeInfo {
+pub struct CTradeInfo {
     metric: HashMap<String, Option<f64>>,
 }
 
 impl CTradeInfo {
-    fn new(info: HashMap<String, f64>) -> Self {
+    pub fn new(info: HashMap<String, f64>) -> Self {
         let mut metric = HashMap::new();
         for metric_name in TRADE_INFO_LST {
             metric.insert(
@@ -37,7 +37,7 @@ enum TRADE_INFO_LST {
 }
 
 impl TRADE_INFO_LST {
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         format!("{:?}", self)
     }
 }

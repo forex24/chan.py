@@ -1,5 +1,12 @@
 use std::collections::HashMap;
 
+use crate::{
+    bi::CBi,
+    cenum::{BI_DIR, BI_TYPE, FX_TYPE, KLINE_DIR},
+    klc::CKLine,
+};
+
+/*
 #[derive(Debug, Clone)]
 struct CChanException {
     message: String,
@@ -7,7 +14,7 @@ struct CChanException {
 }
 
 impl CChanException {
-    fn new(message: String, err_code: i32) -> Self {
+    pub fn new(message: String, err_code: i32) -> Self {
         Self { message, err_code }
     }
 }
@@ -39,16 +46,16 @@ struct CKLine {
 }
 
 impl CKLine {
-    fn get_next(&self) -> Option<&CKLine> {
+    pub fn get_next(&self) -> Option<&CKLine> {
         self.next.as_ref().map(|boxed| boxed.as_ref())
     }
 
-    fn check_fx_valid(&self, klc: &CKLine, bi_fx_check: bool, for_virtual: bool) -> bool {
+    pub fn check_fx_valid(&self, klc: &CKLine, bi_fx_check: bool, for_virtual: bool) -> bool {
         // Implement this method based on your logic
         true
     }
 
-    fn has_gap_with_next(&self) -> bool {
+    pub fn has_gap_with_next(&self) -> bool {
         // Implement this method based on your logic
         false
     }
@@ -91,7 +98,7 @@ struct CBi {
 }
 
 impl CBi {
-    fn new(begin_klc: CKLine, end_klc: CKLine, idx: i64, is_sure: bool) -> Self {
+    pub fn new(begin_klc: CKLine, end_klc: CKLine, idx: i64, is_sure: bool) -> Self {
         let mut bi = Self {
             begin_klc: begin_klc.clone(),
             end_klc: end_klc.clone(),
@@ -111,7 +118,7 @@ impl CBi {
         bi
     }
 
-    fn set(&mut self, begin_klc: CKLine, end_klc: CKLine) {
+    pub fn set(&mut self, begin_klc: CKLine, end_klc: CKLine) {
         self.begin_klc = begin_klc.clone();
         self.end_klc = end_klc.clone();
         self.dir = match begin_klc.fx {
@@ -123,7 +130,7 @@ impl CBi {
         self.clean_cache();
     }
 
-    fn check(&self) {
+    pub fn check(&self) {
         if self.is_down() {
             assert!(
                 self.begin_klc.high > self.end_klc.low,
@@ -137,11 +144,11 @@ impl CBi {
         }
     }
 
-    fn clean_cache(&mut self) {
+    pub fn clean_cache(&mut self) {
         self._memoize_cache.clear();
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLineUnit {
         if self.is_up() {
             self.end_klc.get_peak_klu(true)
         } else {
@@ -149,49 +156,50 @@ impl CBi {
         }
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == Some(BI_DIR::DOWN)
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == Some(BI_DIR::UP)
     }
 
-    fn update_virtual_end(&mut self, new_klc: CKLine) {
+    pub fn update_virtual_end(&mut self, new_klc: CKLine) {
         self.append_sure_end(self.end_klc.clone());
         self.update_new_end(new_klc);
         self.is_sure = false;
     }
 
-    fn restore_from_virtual_end(&mut self, sure_end: CKLine) {
+    pub fn restore_from_virtual_end(&mut self, sure_end: CKLine) {
         self.is_sure = true;
         self.update_new_end(sure_end);
         self.sure_end.clear();
     }
 
-    fn append_sure_end(&mut self, klc: CKLine) {
+    pub fn append_sure_end(&mut self, klc: CKLine) {
         self.sure_end.push(klc);
     }
 
-    fn update_new_end(&mut self, new_klc: CKLine) {
+    pub fn update_new_end(&mut self, new_klc: CKLine) {
         self.end_klc = new_klc;
         self.check();
         self.clean_cache();
     }
 }
+*/
 
 #[derive(Debug, Clone)]
-struct CBiConfig {
-    bi_allow_sub_peak: bool,
-    is_strict: bool,
-    gap_as_kl: bool,
-    bi_algo: String,
-    bi_fx_check: bool,
-    bi_end_is_peak: bool,
+pub struct CBiConfig {
+    pub bi_allow_sub_peak: bool,
+    pub is_strict: bool,
+    pub gap_as_kl: bool,
+    pub bi_algo: String,
+    pub bi_fx_check: bool,
+    pub bi_end_is_peak: bool,
 }
 
 impl CBiConfig {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             bi_allow_sub_peak: false,
             is_strict: false,
@@ -204,15 +212,15 @@ impl CBiConfig {
 }
 
 #[derive(Debug, Clone)]
-struct CBiList {
-    bi_list: Vec<CBi>,
-    last_end: Option<CKLine>,
-    config: CBiConfig,
-    free_klc_lst: Vec<CKLine>,
+pub struct CBiList {
+    pub bi_list: Vec<CBi>,
+    pub last_end: Option<CKLine>,
+    pub config: CBiConfig,
+    pub free_klc_lst: Vec<CKLine>,
 }
 
 impl CBiList {
-    fn new(bi_conf: CBiConfig) -> Self {
+    pub fn new(bi_conf: CBiConfig) -> Self {
         Self {
             bi_list: Vec::new(),
             last_end: None,
@@ -221,7 +229,7 @@ impl CBiList {
         }
     }
 
-    fn __str__(&self) -> String {
+    pub fn __str__(&self) -> String {
         self.bi_list
             .iter()
             .map(|bi| bi.__str__())
@@ -229,19 +237,19 @@ impl CBiList {
             .join("\n")
     }
 
-    fn __iter__(&self) -> std::slice::Iter<CBi> {
+    pub fn __iter__(&self) -> std::slice::Iter<CBi> {
         self.bi_list.iter()
     }
 
-    fn __getitem__(&self, index: usize) -> &CBi {
+    pub fn __getitem__(&self, index: usize) -> &CBi {
         &self.bi_list[index]
     }
 
-    fn __len__(&self) -> usize {
+    pub fn __len__(&self) -> usize {
         self.bi_list.len()
     }
 
-    fn try_create_first_bi(&mut self, klc: CKLine) -> bool {
+    pub fn try_create_first_bi(&mut self, klc: CKLine) -> bool {
         for exist_free_klc in &self.free_klc_lst {
             if exist_free_klc.fx == klc.fx {
                 continue;
@@ -257,7 +265,7 @@ impl CBiList {
         return false;
     }
 
-    fn update_bi(&mut self, klc: CKLine, last_klc: CKLine, cal_virtual: bool) -> bool {
+    pub fn update_bi(&mut self, klc: CKLine, last_klc: CKLine, cal_virtual: bool) -> bool {
         let flag1 = self.update_bi_sure(klc.clone());
         if cal_virtual {
             let flag2 = self.try_add_virtual_bi(last_klc.clone());
@@ -267,7 +275,7 @@ impl CBiList {
         }
     }
 
-    fn can_update_peak(&self, klc: &CKLine) -> bool {
+    pub fn can_update_peak(&self, klc: &CKLine) -> bool {
         if self.config.bi_allow_sub_peak || self.bi_list.len() < 2 {
             return false;
         }
@@ -302,7 +310,7 @@ impl CBiList {
         return true;
     }
 
-    fn update_peak(&mut self, klc: CKLine, for_virtual: bool) -> bool {
+    pub fn update_peak(&mut self, klc: CKLine, for_virtual: bool) -> bool {
         if !self.can_update_peak(&klc) {
             return false;
         }
@@ -321,7 +329,7 @@ impl CBiList {
         }
     }
 
-    fn update_bi_sure(&mut self, klc: CKLine) -> bool {
+    pub fn update_bi_sure(&mut self, klc: CKLine) -> bool {
         let _tmp_end = self.get_last_klu_of_last_bi();
         self.delete_virtual_bi();
         if klc.fx == FX_TYPE::UNKNOWN {
@@ -342,7 +350,7 @@ impl CBiList {
         return _tmp_end != self.get_last_klu_of_last_bi();
     }
 
-    fn delete_virtual_bi(&mut self) {
+    pub fn delete_virtual_bi(&mut self) {
         if !self.bi_list.is_empty() && !self.bi_list.last().unwrap().is_sure {
             let sure_end_list: Vec<CKLine> = self.bi_list.last().unwrap().sure_end.clone();
             if !sure_end_list.is_empty() {
@@ -373,7 +381,7 @@ impl CBiList {
         }
     }
 
-    fn try_add_virtual_bi(&mut self, klc: CKLine, need_del_end: bool) -> bool {
+    pub fn try_add_virtual_bi(&mut self, klc: CKLine, need_del_end: bool) -> bool {
         if need_del_end {
             self.delete_virtual_bi();
         }
@@ -417,7 +425,7 @@ impl CBiList {
         return false;
     }
 
-    fn add_new_bi(&mut self, pre_klc: CKLine, cur_klc: CKLine, is_sure: bool) {
+    pub fn add_new_bi(&mut self, pre_klc: CKLine, cur_klc: CKLine, is_sure: bool) {
         self.bi_list.push(CBi::new(
             pre_klc.clone(),
             cur_klc.clone(),
@@ -432,7 +440,7 @@ impl CBiList {
         }
     }
 
-    fn satisfy_bi_span(&self, klc: &CKLine, last_end: &CKLine) -> bool {
+    pub fn satisfy_bi_span(&self, klc: &CKLine, last_end: &CKLine) -> bool {
         let bi_span = self.get_klc_span(klc, last_end);
         if self.config.is_strict {
             return bi_span >= 4;
@@ -453,7 +461,7 @@ impl CBiList {
         return bi_span >= 3 && uint_kl_cnt >= 3;
     }
 
-    fn get_klc_span(&self, klc: &CKLine, last_end: &CKLine) -> i64 {
+    pub fn get_klc_span(&self, klc: &CKLine, last_end: &CKLine) -> i64 {
         let mut span = klc.idx - last_end.idx;
         if !self.config.gap_as_kl {
             return span;
@@ -471,7 +479,7 @@ impl CBiList {
         return span;
     }
 
-    fn can_make_bi(&self, klc: CKLine, last_end: CKLine, for_virtual: bool) -> bool {
+    pub fn can_make_bi(&self, klc: CKLine, last_end: CKLine, for_virtual: bool) -> bool {
         let satisify_span = if self.config.bi_algo == "fx" {
             true
         } else {
@@ -489,8 +497,8 @@ impl CBiList {
         return true;
     }
 
-    fn try_update_end(&mut self, klc: CKLine, for_virtual: bool) -> bool {
-        fn check_top(klc: &CKLine, for_virtual: bool) -> bool {
+    pub fn try_update_end(&mut self, klc: CKLine, for_virtual: bool) -> bool {
+        pub fn check_top(klc: &CKLine, for_virtual: bool) -> bool {
             if for_virtual {
                 klc.dir == KLINE_DIR::UP
             } else {
@@ -498,7 +506,7 @@ impl CBiList {
             }
         }
 
-        fn check_bottom(klc: &CKLine, for_virtual: bool) -> bool {
+        pub fn check_bottom(klc: &CKLine, for_virtual: bool) -> bool {
             if for_virtual {
                 klc.dir == KLINE_DIR::DOWN
             } else {
@@ -527,7 +535,7 @@ impl CBiList {
         }
     }
 
-    fn get_last_klu_of_last_bi(&self) -> Option<i64> {
+    pub fn get_last_klu_of_last_bi(&self) -> Option<i64> {
         if !self.bi_list.is_empty() {
             Some(self.bi_list.last().unwrap().get_end_klu().idx)
         } else {
@@ -536,7 +544,7 @@ impl CBiList {
     }
 }
 
-fn end_is_peak(last_end: CKLine, cur_end: CKLine) -> bool {
+pub fn end_is_peak(last_end: CKLine, cur_end: CKLine) -> bool {
     if last_end.fx == FX_TYPE::BOTTOM {
         let cmp_thred = cur_end.high;
         let mut klc = last_end.get_next().unwrap();

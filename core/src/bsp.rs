@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+/*#[derive(Debug, Clone)]
 struct CBi {
     begin_klc: CKLineUnit,
     end_klc: CKLineUnit,
@@ -14,39 +14,39 @@ struct CBi {
 }
 
 impl CBi {
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         self.high
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         self.low
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_klc.high
     }
 
-    fn get_begin_val(&self) -> f64 {
+    pub fn get_begin_val(&self) -> f64 {
         self.begin_klc.high
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLineUnit {
         self.end_klc.clone()
     }
 
-    fn get_begin_klu(&self) -> CKLineUnit {
+    pub fn get_begin_klu(&self) -> CKLineUnit {
         self.begin_klc.clone()
     }
 
-    fn amp(&self) -> f64 {
+    pub fn amp(&self) -> f64 {
         (self.get_end_val() - self.get_begin_val()).abs()
     }
 }
@@ -80,7 +80,7 @@ struct CSeg<T: Clone> {
 }
 
 impl<T: Clone + PartialEq> CSeg<T> {
-    fn new(
+    pub fn new(
         idx: i64,
         start_bi: T,
         end_bi: T,
@@ -123,38 +123,21 @@ impl<T: Clone + PartialEq> CSeg<T> {
     }
 
     // 其他方法省略，因为它们不直接用于 CBS_Point
-}
+}*/
 
 #[derive(Debug, Clone)]
-enum BSP_TYPE {
-    Type1,
-    Type2,
-    Type3,
-}
-
-impl BSP_TYPE {
-    fn value(&self) -> &'static str {
-        match self {
-            BSP_TYPE::Type1 => "Type1",
-            BSP_TYPE::Type2 => "Type2",
-            BSP_TYPE::Type3 => "Type3",
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct CFeatures {
+pub struct CFeatures {
     features: HashMap<String, f64>,
 }
 
 impl CFeatures {
-    fn new(feature_dict: Option<HashMap<String, f64>>) -> Self {
+    pub fn new(feature_dict: Option<HashMap<String, f64>>) -> Self {
         Self {
             features: feature_dict.unwrap_or_default(),
         }
     }
 
-    fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
+    pub fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
         let key = inp1.into();
         if let Some(value) = inp2 {
             self.features.insert(key, value);
@@ -163,9 +146,9 @@ impl CFeatures {
 }
 
 #[derive(Debug, Clone)]
-struct CBS_Point<T: Clone> {
+pub struct CBS_Point<T: Clone> {
     bi: T,
-    klu: CKLineUnit,
+    klu: CKLine_Unit,
     is_buy: bool,
     type_: Vec<BSP_TYPE>,
     relate_bsp1: Option<Box<CBS_Point<T>>>,
@@ -174,7 +157,7 @@ struct CBS_Point<T: Clone> {
 }
 
 impl<T: Clone> CBS_Point<T> {
-    fn new(
+    pub fn new(
         bi: T,
         is_buy: bool,
         bs_type: BSP_TYPE,
@@ -196,11 +179,11 @@ impl<T: Clone> CBS_Point<T> {
         bsp
     }
 
-    fn add_type(&mut self, bs_type: BSP_TYPE) {
+    pub fn add_type(&mut self, bs_type: BSP_TYPE) {
         self.type_.push(bs_type);
     }
 
-    fn type2str(&self) -> String {
+    pub fn type2str(&self) -> String {
         self.type_
             .iter()
             .map(|x| x.value())
@@ -208,7 +191,11 @@ impl<T: Clone> CBS_Point<T> {
             .join(",")
     }
 
-    fn add_another_bsp_prop(&mut self, bs_type: BSP_TYPE, relate_bsp1: Option<Box<CBS_Point<T>>>) {
+    pub fn add_another_bsp_prop(
+        &mut self,
+        bs_type: BSP_TYPE,
+        relate_bsp1: Option<Box<CBS_Point<T>>>,
+    ) {
         self.add_type(bs_type);
         if self.relate_bsp1.is_none() {
             self.relate_bsp1 = relate_bsp1;
@@ -220,11 +207,11 @@ impl<T: Clone> CBS_Point<T> {
         }
     }
 
-    fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
+    pub fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
         self.features.add_feat(inp1, inp2);
     }
 
-    fn init_common_feature(&mut self) {
+    pub fn init_common_feature(&mut self) {
         self.add_feat("bsp_bi_amp", Some(self.bi.amp()));
     }
 }

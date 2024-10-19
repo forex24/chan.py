@@ -1,13 +1,15 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+use crate::{bi::CBi, seg::CSeg, zs::CZS};
+
+/*#[derive(Debug, Clone)]
 struct CChanException {
     message: String,
     err_code: i32,
 }
 
 impl CChanException {
-    fn new(message: String, err_code: i32) -> Self {
+    pub fn new(message: String, err_code: i32) -> Self {
         Self { message, err_code }
     }
 }
@@ -25,35 +27,35 @@ struct CBi {
 }
 
 impl CBi {
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         self.high
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         self.low
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_klc.high
     }
 
-    fn get_begin_val(&self) -> f64 {
+    pub fn get_begin_val(&self) -> f64 {
         self.begin_klc.high
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLineUnit {
         self.end_klc.clone()
     }
 
-    fn get_begin_klu(&self) -> CKLineUnit {
+    pub fn get_begin_klu(&self) -> CKLineUnit {
         self.begin_klc.clone()
     }
 }
@@ -87,7 +89,7 @@ struct CSeg<T: Clone> {
 }
 
 impl<T: Clone + PartialEq> CSeg<T> {
-    fn new(
+    pub fn new(
         idx: i64,
         start_bi: T,
         end_bi: T,
@@ -152,7 +154,7 @@ struct CZS<T: Clone> {
 }
 
 impl<T: Clone + PartialEq> CZS<T> {
-    fn new(lst: Option<Vec<T>>, is_sure: bool) -> Self {
+    pub fn new(lst: Option<Vec<T>>, is_sure: bool) -> Self {
         let mut zs = Self {
             is_sure,
             sub_zs_lst: Vec::new(),
@@ -193,18 +195,18 @@ impl<T: Clone + PartialEq> CZS<T> {
     }
 
     // 其他方法省略，因为它们不直接用于 CZSList
-}
+}*/
 
 #[derive(Debug, Clone)]
-struct CZSConfig {
-    one_bi_zs: bool,
-    zs_algo: String,
-    need_combine: bool,
-    zs_combine_mode: String,
+pub struct CZSConfig {
+    pub one_bi_zs: bool,
+    pub zs_algo: String,
+    pub need_combine: bool,
+    pub zs_combine_mode: String,
 }
 
 impl CZSConfig {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             one_bi_zs: false,
             zs_algo: "normal".to_string(),
@@ -215,15 +217,15 @@ impl CZSConfig {
 }
 
 #[derive(Debug, Clone)]
-struct CZSList {
-    zs_lst: Vec<CZS<CBi>>,
-    config: CZSConfig,
-    free_item_lst: Vec<CBi>,
-    last_sure_pos: i64,
+pub struct CZSList {
+    pub zs_lst: Vec<CZS<CBi>>,
+    pub config: CZSConfig,
+    pub free_item_lst: Vec<CBi>,
+    pub last_sure_pos: i64,
 }
 
 impl CZSList {
-    fn new(zs_config: CZSConfig) -> Self {
+    pub fn new(zs_config: CZSConfig) -> Self {
         Self {
             zs_lst: Vec::new(),
             config: zs_config,
@@ -232,7 +234,7 @@ impl CZSList {
         }
     }
 
-    fn update_last_pos(&mut self, seg_list: &Vec<CSeg<CBi>>) {
+    pub fn update_last_pos(&mut self, seg_list: &Vec<CSeg<CBi>>) {
         self.last_sure_pos = -1;
         for seg in seg_list.iter().rev() {
             if seg.is_sure {
@@ -242,11 +244,11 @@ impl CZSList {
         }
     }
 
-    fn seg_need_cal(&self, seg: &CSeg<CBi>) -> bool {
+    pub fn seg_need_cal(&self, seg: &CSeg<CBi>) -> bool {
         seg.start_bi.idx >= self.last_sure_pos
     }
 
-    fn add_to_free_lst(&mut self, item: CBi, is_sure: bool, zs_algo: &str) {
+    pub fn add_to_free_lst(&mut self, item: CBi, is_sure: bool, zs_algo: &str) {
         if !self.free_item_lst.is_empty() && item.idx == self.free_item_lst.last().unwrap().idx {
             self.free_item_lst.pop();
         }
@@ -260,11 +262,11 @@ impl CZSList {
         }
     }
 
-    fn clear_free_lst(&mut self) {
+    pub fn clear_free_lst(&mut self) {
         self.free_item_lst.clear();
     }
 
-    fn update(&mut self, bi: CBi, is_sure: bool) {
+    pub fn update(&mut self, bi: CBi, is_sure: bool) {
         if self.free_item_lst.is_empty() && self.try_add_to_end(bi) {
             self.try_combine();
             return;
@@ -272,7 +274,7 @@ impl CZSList {
         self.add_to_free_lst(bi, is_sure, "normal");
     }
 
-    fn try_add_to_end(&self, bi: CBi) -> bool {
+    pub fn try_add_to_end(&self, bi: CBi) -> bool {
         if self.zs_lst.is_empty() {
             false
         } else {
@@ -280,7 +282,7 @@ impl CZSList {
         }
     }
 
-    fn add_zs_from_bi_range(&mut self, seg_bi_lst: Vec<CBi>, seg_dir: i32, seg_is_sure: bool) {
+    pub fn add_zs_from_bi_range(&mut self, seg_bi_lst: Vec<CBi>, seg_dir: i32, seg_is_sure: bool) {
         let mut deal_bi_cnt = 0;
         for bi in seg_bi_lst {
             if bi.dir == seg_dir {
@@ -295,7 +297,12 @@ impl CZSList {
         }
     }
 
-    fn try_construct_zs(&self, lst: &Vec<CBi>, is_sure: bool, zs_algo: &str) -> Option<CZS<CBi>> {
+    pub fn try_construct_zs(
+        &self,
+        lst: &Vec<CBi>,
+        is_sure: bool,
+        zs_algo: &str,
+    ) -> Option<CZS<CBi>> {
         let mut lst = lst.clone();
         if zs_algo == "normal" {
             if !self.config.one_bi_zs {
@@ -332,7 +339,7 @@ impl CZSList {
         }
     }
 
-    fn cal_bi_zs(&mut self, bi_lst: &Vec<CBi>, seg_lst: &Vec<CSeg<CBi>>) {
+    pub fn cal_bi_zs(&mut self, bi_lst: &Vec<CBi>, seg_lst: &Vec<CSeg<CBi>>) {
         while !self.zs_lst.is_empty()
             && self.zs_lst.last().unwrap().begin_bi.idx >= self.last_sure_pos
         {
@@ -396,7 +403,7 @@ impl CZSList {
         self.update_last_pos(seg_lst);
     }
 
-    fn update_overseg_zs(&mut self, bi: CBi) {
+    pub fn update_overseg_zs(&mut self, bi: CBi) {
         if !self.zs_lst.is_empty() && self.free_item_lst.is_empty() {
             if bi.next.is_none() {
                 return;
@@ -422,19 +429,19 @@ impl CZSList {
         self.add_to_free_lst(bi, bi.is_sure, "over_seg");
     }
 
-    fn __iter__(&self) -> std::slice::Iter<CZS<CBi>> {
+    pub fn __iter__(&self) -> std::slice::Iter<CZS<CBi>> {
         self.zs_lst.iter()
     }
 
-    fn __len__(&self) -> usize {
+    pub fn __len__(&self) -> usize {
         self.zs_lst.len()
     }
 
-    fn __getitem__(&self, index: usize) -> &CZS<CBi> {
+    pub fn __getitem__(&self, index: usize) -> &CZS<CBi> {
         &self.zs_lst[index]
     }
 
-    fn try_combine(&mut self) {
+    pub fn try_combine(&mut self) {
         if !self.config.need_combine {
             return;
         }
@@ -447,7 +454,7 @@ impl CZSList {
     }
 }
 
-fn revert_bi_dir(dir: i32) -> i32 {
+pub fn revert_bi_dir(dir: i32) -> i32 {
     if dir == 1 {
         -1
     } else {

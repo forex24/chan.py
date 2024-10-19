@@ -1,14 +1,14 @@
 #[derive(Debug, Clone)]
-struct CMACD_item {
-    fast_ema: f64,
-    slow_ema: f64,
-    dif: f64,
-    dea: f64,
-    macd: f64,
+pub struct CMACD_item {
+    pub fast_ema: f64,
+    pub slow_ema: f64,
+    pub dif: f64,
+    pub dea: f64,
+    pub macd: f64,
 }
 
 impl CMACD_item {
-    fn new(fast_ema: f64, slow_ema: f64, dif: f64, dea: f64) -> Self {
+    pub fn new(fast_ema: f64, slow_ema: f64, dif: f64, dea: f64) -> Self {
         let macd = 2.0 * (dif - dea);
         Self {
             fast_ema,
@@ -21,15 +21,15 @@ impl CMACD_item {
 }
 
 #[derive(Debug, Clone)]
-struct CMACD {
-    macd_info: Vec<CMACD_item>,
-    fastperiod: usize,
-    slowperiod: usize,
-    signalperiod: usize,
+pub struct CMACD {
+    pub macd_info: Vec<CMACD_item>,
+    pub fastperiod: usize,
+    pub slowperiod: usize,
+    pub signalperiod: usize,
 }
 
 impl CMACD {
-    fn new(fastperiod: usize, slowperiod: usize, signalperiod: usize) -> Self {
+    pub fn new(fastperiod: usize, slowperiod: usize, signalperiod: usize) -> Self {
         Self {
             macd_info: Vec::new(),
             fastperiod,
@@ -38,7 +38,7 @@ impl CMACD {
         }
     }
 
-    fn add(&mut self, value: f64) -> CMACD_item {
+    pub fn add(&mut self, value: f64) -> CMACD_item {
         if self.macd_info.is_empty() {
             self.macd_info.push(CMACD_item::new(value, value, 0.0, 0.0));
         } else {

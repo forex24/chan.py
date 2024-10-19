@@ -1,5 +1,4 @@
 use std::f64;
-
 fn _truncate(x: f64) -> f64 {
     if x == 0.0 {
         1e-7
@@ -9,15 +8,15 @@ fn _truncate(x: f64) -> f64 {
 }
 
 #[derive(Debug, Clone)]
-struct BOLL_Metric {
-    theta: f64,
-    up: f64,
-    down: f64,
-    mid: f64,
+pub struct BOLL_Metric {
+    pub theta: f64,
+    pub up: f64,
+    pub down: f64,
+    pub mid: f64,
 }
 
 impl BOLL_Metric {
-    fn new(ma: f64, theta: f64) -> Self {
+    pub fn new(ma: f64, theta: f64) -> Self {
         let theta = _truncate(theta);
         Self {
             theta,
@@ -29,18 +28,18 @@ impl BOLL_Metric {
 }
 
 #[derive(Debug, Clone)]
-struct BollModel {
-    n: usize,
-    arr: Vec<f64>,
+pub struct BollModel {
+    pub n: usize,
+    pub arr: Vec<f64>,
 }
 
 impl BollModel {
-    fn new(n: usize) -> Self {
+    pub fn new(n: usize) -> Self {
         assert!(n > 1);
         Self { n, arr: Vec::new() }
     }
 
-    fn add(&mut self, value: f64) -> BOLL_Metric {
+    pub fn add(&mut self, value: f64) -> BOLL_Metric {
         self.arr.push(value);
         if self.arr.len() > self.n {
             self.arr.drain(0..self.arr.len() - self.n);

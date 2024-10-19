@@ -1,14 +1,14 @@
 #[derive(Debug, Clone)]
-struct RSI {
-    close_arr: Vec<f64>,
-    period: usize,
-    diff: Vec<f64>,
-    up: Vec<f64>,
-    down: Vec<f64>,
+pub struct RSI {
+    pub close_arr: Vec<f64>,
+    pub period: usize,
+    pub diff: Vec<f64>,
+    pub up: Vec<f64>,
+    pub down: Vec<f64>,
 }
 
 impl RSI {
-    fn new(period: usize) -> Self {
+    pub fn new(period: usize) -> Self {
         Self {
             close_arr: Vec::new(),
             period,
@@ -18,7 +18,7 @@ impl RSI {
         }
     }
 
-    fn add(&mut self, close: f64) -> f64 {
+    pub fn add(&mut self, close: f64) -> f64 {
         self.close_arr.push(close);
         if self.close_arr.len() == 1 {
             return 50.0;

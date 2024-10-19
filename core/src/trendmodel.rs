@@ -1,12 +1,12 @@
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
-enum TREND_TYPE {
+pub enum TREND_TYPE {
     MEAN,
     MAX,
     MIN,
 }
-
+/*
 #[derive(Debug, Clone)]
 struct CChanException {
     message: String,
@@ -14,20 +14,20 @@ struct CChanException {
 }
 
 impl CChanException {
-    fn new(message: String, err_code: i32) -> Self {
+    pub fn new(message: String, err_code: i32) -> Self {
         Self { message, err_code }
     }
 }
-
+*/
 #[derive(Debug, Clone)]
-struct CTrendModel {
-    t: usize,
-    arr: Vec<f64>,
-    trend_type: TREND_TYPE,
+pub struct CTrendModel {
+    pub t: usize,
+    pub arr: Vec<f64>,
+    pub trend_type: TREND_TYPE,
 }
 
 impl CTrendModel {
-    fn new(trend_type: TREND_TYPE, t: usize) -> Self {
+    pub fn new(trend_type: TREND_TYPE, t: usize) -> Self {
         Self {
             t,
             arr: Vec::new(),
@@ -35,7 +35,7 @@ impl CTrendModel {
         }
     }
 
-    fn add(&mut self, value: f64) -> f64 {
+    pub fn add(&mut self, value: f64) -> f64 {
         self.arr.push(value);
         if self.arr.len() > self.t {
             self.arr.drain(0..self.arr.len() - self.t);

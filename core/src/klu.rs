@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::fmt;
 
+use crate::cenum::{CTime, DATA_FIELD};
+
+/*
 #[derive(Debug, Clone)]
 struct CChanException {
     message: String,
@@ -97,25 +100,25 @@ struct RSI {
 struct KDJ {
     // Define your KDJ fields here
 }
-
+*/
 #[derive(Debug, Clone)]
-struct CKLine_Unit {
-    kl_type: Option<String>,
-    time: CTime,
-    close: f64,
-    open: f64,
-    high: f64,
-    low: f64,
-    trade_info: CTradeInfo,
-    demark: CDemarkIndex,
-    sub_kl_list: Vec<CKLine_Unit>,
-    sup_kl: Option<Box<CKLine_Unit>>,
-    klc: Option<CKLine>,
-    trend: HashMap<TREND_TYPE, HashMap<i32, f64>>,
-    limit_flag: i32,
-    pre: Option<Box<CKLine_Unit>>,
-    next: Option<Box<CKLine_Unit>>,
-    idx: i32,
+pub struct CKLine_Unit {
+    pub kl_type: Option<String>,
+    pub time: CTime,
+    pub close: f64,
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub trade_info: CTradeInfo,
+    pub demark: CDemarkIndex,
+    pub sub_kl_list: Vec<CKLine_Unit>,
+    pub sup_kl: Option<Box<CKLine_Unit>>,
+    pub klc: Option<CKLine>,
+    pub trend: HashMap<TREND_TYPE, HashMap<i32, f64>>,
+    pub limit_flag: i32,
+    pub pre: Option<Box<CKLine_Unit>>,
+    pub next: Option<Box<CKLine_Unit>>,
+    pub idx: i32,
 }
 
 impl CKLine_Unit {

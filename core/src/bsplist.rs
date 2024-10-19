@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+use crate::{bsp::CBS_Point, cenum::BSP_TYPE, seg::CSeg};
+
+/*#[derive(Debug, Clone)]
 struct CBi {
     begin_klc: CKLineUnit,
     end_klc: CKLineUnit,
@@ -14,39 +16,39 @@ struct CBi {
 }
 
 impl CBi {
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         self.high
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         self.low
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_klc.high
     }
 
-    fn get_begin_val(&self) -> f64 {
+    pub fn get_begin_val(&self) -> f64 {
         self.begin_klc.high
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLineUnit {
         self.end_klc.clone()
     }
 
-    fn get_begin_klu(&self) -> CKLineUnit {
+    pub fn get_begin_klu(&self) -> CKLineUnit {
         self.begin_klc.clone()
     }
 
-    fn amp(&self) -> f64 {
+    pub fn amp(&self) -> f64 {
         (self.get_end_val() - self.get_begin_val()).abs()
     }
 }
@@ -80,7 +82,7 @@ struct CSeg<T: Clone> {
 }
 
 impl<T: Clone + PartialEq> CSeg<T> {
-    fn new(
+    pub fn new(
         idx: i64,
         start_bi: T,
         end_bi: T,
@@ -136,7 +138,7 @@ enum BSP_TYPE {
 }
 
 impl BSP_TYPE {
-    fn value(&self) -> &'static str {
+    pub fn value(&self) -> &'static str {
         match self {
             BSP_TYPE::T1 => "T1",
             BSP_TYPE::T1P => "T1P",
@@ -148,25 +150,7 @@ impl BSP_TYPE {
     }
 }
 
-#[derive(Debug, Clone)]
-struct CFeatures {
-    features: HashMap<String, f64>,
-}
 
-impl CFeatures {
-    fn new(feature_dict: Option<HashMap<String, f64>>) -> Self {
-        Self {
-            features: feature_dict.unwrap_or_default(),
-        }
-    }
-
-    fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
-        let key = inp1.into();
-        if let Some(value) = inp2 {
-            self.features.insert(key, value);
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 struct CBS_Point<T: Clone> {
@@ -180,7 +164,7 @@ struct CBS_Point<T: Clone> {
 }
 
 impl<T: Clone> CBS_Point<T> {
-    fn new(
+    pub fn new(
         bi: T,
         is_buy: bool,
         bs_type: BSP_TYPE,
@@ -202,11 +186,11 @@ impl<T: Clone> CBS_Point<T> {
         bsp
     }
 
-    fn add_type(&mut self, bs_type: BSP_TYPE) {
+    pub fn add_type(&mut self, bs_type: BSP_TYPE) {
         self.type_.push(bs_type);
     }
 
-    fn type2str(&self) -> String {
+    pub fn type2str(&self) -> String {
         self.type_
             .iter()
             .map(|x| x.value())
@@ -214,7 +198,11 @@ impl<T: Clone> CBS_Point<T> {
             .join(",")
     }
 
-    fn add_another_bsp_prop(&mut self, bs_type: BSP_TYPE, relate_bsp1: Option<Box<CBS_Point<T>>>) {
+    pub fn add_another_bsp_prop(
+        &mut self,
+        bs_type: BSP_TYPE,
+        relate_bsp1: Option<Box<CBS_Point<T>>>,
+    ) {
         self.add_type(bs_type);
         if self.relate_bsp1.is_none() {
             self.relate_bsp1 = relate_bsp1;
@@ -226,34 +214,35 @@ impl<T: Clone> CBS_Point<T> {
         }
     }
 
-    fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
+    pub fn add_feat(&mut self, inp1: impl Into<String>, inp2: Option<f64>) {
         self.features.add_feat(inp1, inp2);
     }
 
-    fn init_common_feature(&mut self) {
+    pub fn init_common_feature(&mut self) {
         self.add_feat("bsp_bi_amp", Some(self.bi.amp()));
     }
 }
+*/
 
 #[derive(Debug, Clone)]
-struct CBSPointConfig {
-    target_types: Vec<BSP_TYPE>,
-    min_zs_cnt: i32,
-    bsp1_only_multibi_zs: bool,
-    bs1_peak: bool,
-    macd_algo: i32,
-    divergence_rate: f64,
-    max_bs2_rate: f64,
-    bsp2_follow_1: bool,
-    bsp2s_follow_2: bool,
-    max_bsp2s_lv: Option<i32>,
-    strict_bsp3: bool,
-    bsp3_peak: bool,
-    bsp3_follow_1: bool,
+pub struct CBSPointConfig {
+    pub target_types: Vec<BSP_TYPE>,
+    pub min_zs_cnt: i32,
+    pub bsp1_only_multibi_zs: bool,
+    pub bs1_peak: bool,
+    pub macd_algo: i32,
+    pub divergence_rate: f64,
+    pub max_bs2_rate: f64,
+    pub bsp2_follow_1: bool,
+    pub bsp2s_follow_2: bool,
+    pub max_bsp2s_lv: Option<i32>,
+    pub strict_bsp3: bool,
+    pub bsp3_peak: bool,
+    pub bsp3_follow_1: bool,
 }
 
 impl CBSPointConfig {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             target_types: vec![
                 BSP_TYPE::T1,
@@ -278,22 +267,22 @@ impl CBSPointConfig {
         }
     }
 
-    fn get_bs_config(&self, is_down: bool) -> &CBSPointConfig {
+    pub fn get_bs_config(&self, is_down: bool) -> &CBSPointConfig {
         self
     }
 }
 
 #[derive(Debug, Clone)]
-struct CBSPointList<T: Clone, L: Clone> {
-    lst: Vec<CBS_Point<T>>,
-    bsp_dict: HashMap<i64, CBS_Point<T>>,
-    bsp1_lst: Vec<CBS_Point<T>>,
-    config: CBSPointConfig,
-    last_sure_pos: i64,
+pub struct CBSPointList<T: Clone, L: Clone> {
+    pub lst: Vec<CBS_Point<T>>,
+    pub bsp_dict: HashMap<i64, CBS_Point<T>>,
+    pub bsp1_lst: Vec<CBS_Point<T>>,
+    pub config: CBSPointConfig,
+    pub last_sure_pos: i64,
 }
 
 impl<T: Clone, L: Clone> CBSPointList<T, L> {
-    fn new(bs_point_config: CBSPointConfig) -> Self {
+    pub fn new(bs_point_config: CBSPointConfig) -> Self {
         Self {
             lst: Vec::new(),
             bsp_dict: HashMap::new(),
@@ -303,19 +292,19 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn __iter__(&self) -> std::slice::Iter<CBS_Point<T>> {
+    pub fn __iter__(&self) -> std::slice::Iter<CBS_Point<T>> {
         self.lst.iter()
     }
 
-    fn __len__(&self) -> usize {
+    pub fn __len__(&self) -> usize {
         self.lst.len()
     }
 
-    fn __getitem__(&self, index: usize) -> &CBS_Point<T> {
+    pub fn __getitem__(&self, index: usize) -> &CBS_Point<T> {
         &self.lst[index]
     }
 
-    fn cal(&mut self, bi_list: L, seg_list: Vec<CSeg<T>>) {
+    pub fn cal(&mut self, bi_list: L, seg_list: Vec<CSeg<T>>) {
         self.lst = self
             .lst
             .iter()
@@ -341,7 +330,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         self.update_last_pos(&seg_list);
     }
 
-    fn update_last_pos(&mut self, seg_list: &Vec<CSeg<T>>) {
+    pub fn update_last_pos(&mut self, seg_list: &Vec<CSeg<T>>) {
         self.last_sure_pos = -1;
         for seg in seg_list.iter().rev() {
             if seg.is_sure {
@@ -351,11 +340,11 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn seg_need_cal(&self, seg: &CSeg<T>) -> bool {
+    pub fn seg_need_cal(&self, seg: &CSeg<T>) -> bool {
         seg.end_bi.get_end_klu().idx > self.last_sure_pos
     }
 
-    fn add_bs(
+    pub fn add_bs(
         &mut self,
         bs_type: BSP_TYPE,
         bi: T,
@@ -398,7 +387,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn cal_seg_bs1point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
+    pub fn cal_seg_bs1point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
         for seg in seg_list {
             if !self.seg_need_cal(seg) {
                 continue;
@@ -407,7 +396,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn cal_single_bs1point(&mut self, seg: &CSeg<T>, bi_list: &L) {
+    pub fn cal_single_bs1point(&mut self, seg: &CSeg<T>, bi_list: &L) {
         let bsp_conf = self.config.get_bs_config(seg.is_down());
         let zs_cnt = seg.get_multi_bi_zs_cnt();
         let is_target_bsp = bsp_conf.min_zs_cnt <= 0 || zs_cnt >= bsp_conf.min_zs_cnt;
@@ -424,7 +413,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn treat_bsp1(&mut self, seg: &CSeg<T>, bsp_conf: &CBSPointConfig, is_target_bsp: bool) {
+    pub fn treat_bsp1(&mut self, seg: &CSeg<T>, bsp_conf: &CBSPointConfig, is_target_bsp: bool) {
         let last_zs = seg.zs_lst.last().unwrap();
         let (break_peak, _) = last_zs.out_bi_is_peak(seg.end_bi.idx);
         if bsp_conf.bs1_peak && !break_peak {
@@ -447,7 +436,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         );
     }
 
-    fn treat_pz_bsp1(
+    pub fn treat_pz_bsp1(
         &mut self,
         seg: &CSeg<T>,
         bsp_conf: &CBSPointConfig,
@@ -490,7 +479,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         );
     }
 
-    fn cal_seg_bs2point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
+    pub fn cal_seg_bs2point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
         let bsp1_bi_idx_dict: HashMap<i64, CBS_Point<T>> = self
             .bsp1_lst
             .iter()
@@ -507,7 +496,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn treat_bsp2(
+    pub fn treat_bsp2(
         &mut self,
         seg: &CSeg<T>,
         bsp1_bi_idx_dict: &HashMap<i64, CBS_Point<T>>,
@@ -565,7 +554,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         );
     }
 
-    fn treat_bsp2s(
+    pub fn treat_bsp2s(
         &mut self,
         seg_list: &Vec<CSeg<T>>,
         bi_list: &L,
@@ -633,7 +622,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn cal_seg_bs3point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
+    pub fn cal_seg_bs3point(&mut self, seg_list: &Vec<CSeg<T>>, bi_list: &L) {
         let bsp1_bi_idx_dict: HashMap<i64, CBS_Point<T>> = self
             .bsp1_lst
             .iter()
@@ -684,7 +673,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn treat_bsp3_after(
+    pub fn treat_bsp3_after(
         &mut self,
         seg_list: &Vec<CSeg<T>>,
         next_seg: &CSeg<T>,
@@ -746,7 +735,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         );
     }
 
-    fn treat_bsp3_before(
+    pub fn treat_bsp3_before(
         &mut self,
         seg_list: &Vec<CSeg<T>>,
         seg: &CSeg<T>,
@@ -796,7 +785,7 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
         }
     }
 
-    fn get_lastest_bsp_list(&self) -> Vec<CBS_Point<T>> {
+    pub fn get_lastest_bsp_list(&self) -> Vec<CBS_Point<T>> {
         if self.lst.is_empty() {
             return Vec::new();
         }
@@ -806,21 +795,21 @@ impl<T: Clone, L: Clone> CBSPointList<T, L> {
     }
 }
 
-fn bsp2s_break_bsp1<T: Clone>(bsp2s_bi: &T, bsp2_break_bi: &T) -> bool {
+pub fn bsp2s_break_bsp1<T: Clone>(bsp2s_bi: &T, bsp2_break_bi: &T) -> bool {
     (bsp2s_bi.is_down() && bsp2s_bi._low() < bsp2_break_bi._low())
         || (bsp2s_bi.is_up() && bsp2s_bi._high() > bsp2_break_bi._high())
 }
 
-fn bsp3_back2zs<T: Clone>(bsp3_bi: &T, zs: &CZS<T>) -> bool {
+pub fn bsp3_back2zs<T: Clone>(bsp3_bi: &T, zs: &CZS<T>) -> bool {
     (bsp3_bi.is_down() && bsp3_bi._low() < zs.high) || (bsp3_bi.is_up() && bsp3_bi._high() > zs.low)
 }
 
-fn bsp3_break_zspeak<T: Clone>(bsp3_bi: &T, zs: &CZS<T>) -> bool {
+pub fn bsp3_break_zspeak<T: Clone>(bsp3_bi: &T, zs: &CZS<T>) -> bool {
     (bsp3_bi.is_down() && bsp3_bi._high() >= zs.peak_high)
         || (bsp3_bi.is_up() && bsp3_bi._low() <= zs.peak_low)
 }
 
-fn cal_bsp3_bi_end_idx<T: Clone>(seg: Option<&CSeg<T>>) -> i64 {
+pub fn cal_bsp3_bi_end_idx<T: Clone>(seg: Option<&CSeg<T>>) -> i64 {
     if seg.is_none() {
         return i64::MAX;
     }

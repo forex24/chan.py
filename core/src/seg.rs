@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::{bsp::CBS_Point, cenum::CChanException, trendline::CTrendLine, zs::CZS};
+/*
 #[derive(Debug, Clone)]
 struct CChanException {
     message: String,
@@ -7,7 +9,7 @@ struct CChanException {
 }
 
 impl CChanException {
-    fn new(message: String, err_code: i32) -> Self {
+    pub fn new(message: String, err_code: i32) -> Self {
         Self { message, err_code }
     }
 }
@@ -25,35 +27,35 @@ struct CBi {
 }
 
 impl CBi {
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         self.high
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         self.low
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_klc.high
     }
 
-    fn get_begin_val(&self) -> f64 {
+    pub fn get_begin_val(&self) -> f64 {
         self.begin_klc.high
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLineUnit {
         self.end_klc.clone()
     }
 
-    fn get_begin_klu(&self) -> CKLineUnit {
+    pub fn get_begin_klu(&self) -> CKLineUnit {
         self.begin_klc.clone()
     }
 }
@@ -77,7 +79,7 @@ struct CEigenFX {
 }
 
 impl CEigenFX {
-    fn new(dir: i32, exclude_included: bool, lv: i32) -> Self {
+    pub fn new(dir: i32, exclude_included: bool, lv: i32) -> Self {
         Self {
             lv,
             dir,
@@ -91,30 +93,30 @@ impl CEigenFX {
 
     // 其他方法省略，因为它们不直接用于 CSeg
 }
-
+*/
 #[derive(Debug, Clone)]
-struct CSeg<T: Clone> {
-    idx: i64,
-    start_bi: T,
-    end_bi: T,
-    is_sure: bool,
-    dir: i32,
-    zs_lst: Vec<CZS<T>>,
-    eigen_fx: Option<CEigenFX>,
-    seg_idx: Option<i64>,
-    parent_seg: Option<Box<CSeg<T>>>,
-    pre: Option<Box<CSeg<T>>>,
-    next: Option<Box<CSeg<T>>>,
-    bsp: Option<CBS_Point>,
-    bi_list: Vec<T>,
-    reason: String,
-    support_trend_line: Option<CTrendLine>,
-    resistance_trend_line: Option<CTrendLine>,
-    ele_inside_is_sure: bool,
+pub struct CSeg<T: Clone> {
+    pub idx: i64,
+    pub start_bi: T,
+    pub end_bi: T,
+    pub is_sure: bool,
+    pub dir: i32,
+    pub zs_lst: Vec<CZS<T>>,
+    pub eigen_fx: Option<CEigenFX>,
+    pub seg_idx: Option<i64>,
+    pub parent_seg: Option<Box<CSeg<T>>>,
+    pub pre: Option<Box<CSeg<T>>>,
+    pub next: Option<Box<CSeg<T>>>,
+    pub bsp: Option<CBS_Point>,
+    pub bi_list: Vec<T>,
+    pub reason: String,
+    pub support_trend_line: Option<CTrendLine>,
+    pub resistance_trend_line: Option<CTrendLine>,
+    pub ele_inside_is_sure: bool,
 }
 
 impl<T: Clone + PartialEq> CSeg<T> {
-    fn new(
+    pub fn new(
         idx: i64,
         start_bi: T,
         end_bi: T,
@@ -156,11 +158,11 @@ impl<T: Clone + PartialEq> CSeg<T> {
         Ok(seg)
     }
 
-    fn set_seg_idx(&mut self, idx: i64) {
+    pub fn set_seg_idx(&mut self, idx: i64) {
         self.seg_idx = Some(idx);
     }
 
-    fn check(&self) -> Result<(), CChanException> {
+    pub fn check(&self) -> Result<(), CChanException> {
         if !self.is_sure {
             return Ok(());
         }
@@ -189,37 +191,37 @@ impl<T: Clone + PartialEq> CSeg<T> {
         Ok(())
     }
 
-    fn __str__(&self) -> String {
+    pub fn __str__(&self) -> String {
         format!(
             "{}->{}: {}  {}",
             self.start_bi.idx, self.end_bi.idx, self.dir, self.is_sure
         )
     }
 
-    fn add_zs(&mut self, zs: CZS<T>) {
+    pub fn add_zs(&mut self, zs: CZS<T>) {
         self.zs_lst.insert(0, zs); // 因为中枢是反序加入的
     }
 
-    fn cal_klu_slope(&self) -> f64 {
+    pub fn cal_klu_slope(&self) -> f64 {
         assert!(self.end_bi.idx >= self.start_bi.idx);
         (self.get_end_val() - self.get_begin_val())
             / (self.get_end_klu().idx - self.get_begin_klu().idx)
             / self.get_begin_val()
     }
 
-    fn cal_amp(&self) -> f64 {
+    pub fn cal_amp(&self) -> f64 {
         (self.get_end_val() - self.get_begin_val()) / self.get_begin_val()
     }
 
-    fn cal_bi_cnt(&self) -> i64 {
+    pub fn cal_bi_cnt(&self) -> i64 {
         self.end_bi.idx - self.start_bi.idx + 1
     }
 
-    fn clear_zs_lst(&mut self) {
+    pub fn clear_zs_lst(&mut self) {
         self.zs_lst.clear();
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         if self.is_down() {
             self.end_bi.get_end_klu().low
         } else {
@@ -227,7 +229,7 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         if self.is_up() {
             self.end_bi.get_end_klu().high
         } else {
@@ -235,39 +237,39 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_bi.get_end_val()
     }
 
-    fn get_begin_val(&self) -> f64 {
+    pub fn get_begin_val(&self) -> f64 {
         self.start_bi.get_begin_val()
     }
 
-    fn amp(&self) -> f64 {
+    pub fn amp(&self) -> f64 {
         (self.get_end_val() - self.get_begin_val()).abs()
     }
 
-    fn get_end_klu(&self) -> CKLineUnit {
+    pub fn get_end_klu(&self) -> CKLine_Unit {
         self.end_bi.get_end_klu()
     }
 
-    fn get_begin_klu(&self) -> CKLineUnit {
+    pub fn get_begin_klu(&self) -> CKLine_Unit {
         self.start_bi.get_begin_klu()
     }
 
-    fn get_klu_cnt(&self) -> i64 {
+    pub fn get_klu_cnt(&self) -> i64 {
         self.get_end_klu().idx - self.get_begin_klu().idx + 1
     }
 
-    fn cal_macd_metric(&self, macd_algo: i32, is_reverse: bool) -> Result<f64, CChanException> {
+    pub fn cal_macd_metric(&self, macd_algo: i32, is_reverse: bool) -> Result<f64, CChanException> {
         match macd_algo {
             1 => Ok(self.cal_macd_slope()), // MACD_ALGO.SLOPE
             2 => Ok(self.cal_macd_amp()),   // MACD_ALGO.AMP
@@ -281,7 +283,7 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn cal_macd_slope(&self) -> f64 {
+    pub fn cal_macd_slope(&self) -> f64 {
         let begin_klu = self.get_begin_klu();
         let end_klu = self.get_end_klu();
         if self.is_up() {
@@ -293,7 +295,7 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn cal_macd_amp(&self) -> f64 {
+    pub fn cal_macd_amp(&self) -> f64 {
         let begin_klu = self.get_begin_klu();
         let end_klu = self.get_end_klu();
         if self.is_down() {
@@ -303,7 +305,7 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn update_bi_list(&mut self, bi_lst: &Vec<T>, idx1: i64, idx2: i64) {
+    pub fn update_bi_list(&mut self, bi_lst: &Vec<T>, idx1: i64, idx2: i64) {
         for bi_idx in idx1..=idx2 {
             let bi = &bi_lst[bi_idx as usize];
             self.bi_list.push(bi.clone());
@@ -315,11 +317,11 @@ impl<T: Clone + PartialEq> CSeg<T> {
         }
     }
 
-    fn get_first_multi_bi_zs(&self) -> Option<CZS<T>> {
+    pub fn get_first_multi_bi_zs(&self) -> Option<CZS<T>> {
         self.zs_lst.iter().find(|zs| !zs.is_one_bi_zs()).cloned()
     }
 
-    fn get_final_multi_bi_zs(&self) -> Option<CZS<T>> {
+    pub fn get_final_multi_bi_zs(&self) -> Option<CZS<T>> {
         self.zs_lst
             .iter()
             .rev()
@@ -327,18 +329,18 @@ impl<T: Clone + PartialEq> CSeg<T> {
             .cloned()
     }
 
-    fn get_multi_bi_zs_cnt(&self) -> usize {
+    pub fn get_multi_bi_zs_cnt(&self) -> usize {
         self.zs_lst.iter().filter(|zs| !zs.is_one_bi_zs()).count()
     }
 }
 
-#[derive(Debug, Clone)]
+/*#[derive(Debug, Clone)]
 struct CZS<T: Clone> {
     // 省略具体实现，因为它们不直接用于 CSeg
 }
 
 impl<T: Clone> CZS<T> {
-    fn is_one_bi_zs(&self) -> bool {
+    pub fn is_one_bi_zs(&self) -> bool {
         // 省略具体实现
         false
     }
@@ -355,8 +357,8 @@ struct CTrendLine {
 }
 
 impl CTrendLine {
-    fn new(bi_list: &Vec<CBi>, side: i32) -> Self {
+    pub fn new(bi_list: &Vec<CBi>, side: i32) -> Self {
         // 省略具体实现
         Self {}
     }
-}
+}*/

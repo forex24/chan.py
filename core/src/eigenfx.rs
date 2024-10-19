@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::{bi::CBi, cenum::CChanException, eigen::CEigen};
+/*
 #[derive(Debug, Clone)]
 struct CChanException {
     message: String,
@@ -7,7 +9,7 @@ struct CChanException {
 }
 
 impl CChanException {
-    fn new(message: String, err_code: i32) -> Self {
+    pub fn new(message: String, err_code: i32) -> Self {
         Self { message, err_code }
     }
 }
@@ -25,23 +27,23 @@ struct CBi {
 }
 
 impl CBi {
-    fn _high(&self) -> f64 {
+    pub fn _high(&self) -> f64 {
         self.high
     }
 
-    fn _low(&self) -> f64 {
+    pub fn _low(&self) -> f64 {
         self.low
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_end_val(&self) -> f64 {
+    pub fn get_end_val(&self) -> f64 {
         self.end_klc.high
     }
 }
@@ -53,23 +55,24 @@ struct CKLineUnit {
     low: f64,
 }
 
+
 #[derive(Debug, Clone)]
-struct CEigen {
-    time_begin: i64,
-    time_end: i64,
-    high: f64,
-    low: f64,
-    lst: Vec<CBi>,
-    dir: i32,
-    fx: i32,
-    pre: Option<Box<CEigen>>,
-    next: Option<Box<CEigen>>,
-    memoize_cache: HashMap<String, CBi>,
-    gap: bool,
+pub struct CEigen {
+    pub time_begin: i64,
+    pub time_end: i64,
+    pub high: f64,
+    pub low: f64,
+    pub lst: Vec<CBi>,
+    pub dir: i32,
+    pub fx: i32,
+    pub pre: Option<Box<CEigen>>,
+    pub next: Option<Box<CEigen>>,
+    pub memoize_cache: HashMap<String, CBi>,
+    pub gap: bool,
 }
 
 impl CEigen {
-    fn new(bi: CBi, dir: i32) -> Result<Self, CChanException> {
+    pub fn new(bi: CBi, dir: i32) -> Result<Self, CChanException> {
         let time_begin = bi.begin_klc.time;
         let time_end = bi.end_klc.time;
         let high = bi._high();
@@ -89,11 +92,11 @@ impl CEigen {
         })
     }
 
-    fn clean_cache(&mut self) {
+    pub fn clean_cache(&mut self) {
         self.memoize_cache.clear();
     }
 
-    fn test_combine(
+    pub fn test_combine(
         &self,
         bi: &CBi,
         exclude_included: bool,
@@ -121,15 +124,15 @@ impl CEigen {
         Err(CChanException::new("combine type unknown".to_string(), 2)) // ErrCode.COMBINER_ERR
     }
 
-    fn add(&mut self, bi: CBi) {
+    pub fn add(&mut self, bi: CBi) {
         self.lst.push(bi);
     }
 
-    fn set_fx(&mut self, fx: i32) {
+    pub fn set_fx(&mut self, fx: i32) {
         self.fx = fx;
     }
 
-    fn try_add(
+    pub fn try_add(
         &mut self,
         bi: CBi,
         exclude_included: bool,
@@ -163,7 +166,7 @@ impl CEigen {
         Ok(dir)
     }
 
-    fn get_peak_klu(&self, is_high: bool) -> Result<CBi, CChanException> {
+    pub fn get_peak_klu(&self, is_high: bool) -> Result<CBi, CChanException> {
         if is_high {
             self.get_high_peak_klu()
         } else {
@@ -171,7 +174,7 @@ impl CEigen {
         }
     }
 
-    fn get_high_peak_klu(&self) -> Result<CBi, CChanException> {
+    pub fn get_high_peak_klu(&self) -> Result<CBi, CChanException> {
         for bi in self.lst.iter().rev() {
             if bi._high() == self.high {
                 return Ok(bi.clone());
@@ -180,7 +183,7 @@ impl CEigen {
         Err(CChanException::new("can't find peak...".to_string(), 2)) // ErrCode.COMBINER_ERR
     }
 
-    fn get_low_peak_klu(&self) -> Result<CBi, CChanException> {
+    pub fn get_low_peak_klu(&self) -> Result<CBi, CChanException> {
         for bi in self.lst.iter().rev() {
             if bi._low() == self.low {
                 return Ok(bi.clone());
@@ -189,7 +192,7 @@ impl CEigen {
         Err(CChanException::new("can't find peak...".to_string(), 2)) // ErrCode.COMBINER_ERR
     }
 
-    fn update_fx(
+    pub fn update_fx(
         &mut self,
         pre: Box<CEigen>,
         next: Box<CEigen>,
@@ -236,7 +239,7 @@ impl CEigen {
         Ok(())
     }
 
-    fn get_peak_bi_idx(&self) -> Result<i64, CChanException> {
+    pub fn get_peak_bi_idx(&self) -> Result<i64, CChanException> {
         if self.fx == 0 {
             // FX_TYPE.UNKNOWN
             return Err(CChanException::new("fx is UNKNOWN".to_string(), 1)); // ErrCode.COMMON_ERROR
@@ -250,30 +253,30 @@ impl CEigen {
         }
     }
 
-    fn set_pre(&mut self, pre: Box<CEigen>) {
+    pub fn set_pre(&mut self, pre: Box<CEigen>) {
         self.pre = Some(pre);
         self.clean_cache();
     }
 
-    fn set_next(&mut self, next: Box<CEigen>) {
+    pub fn set_next(&mut self, next: Box<CEigen>) {
         self.next = Some(next);
         self.clean_cache();
     }
 }
-
+*/
 #[derive(Debug, Clone)]
-struct CEigenFX {
-    lv: i32,
-    dir: i32,
-    ele: Vec<Option<CEigen>>,
-    lst: Vec<CBi>,
-    exclude_included: bool,
-    kl_dir: i32,
-    last_evidence_bi: Option<CBi>,
+pub struct CEigenFX {
+    pub lv: i32,
+    pub dir: i32,
+    pub ele: Vec<Option<CEigen>>,
+    pub lst: Vec<CBi>,
+    pub exclude_included: bool,
+    pub kl_dir: i32,
+    pub last_evidence_bi: Option<CBi>,
 }
 
 impl CEigenFX {
-    fn new(dir: i32, exclude_included: bool, lv: i32) -> Self {
+    pub fn new(dir: i32, exclude_included: bool, lv: i32) -> Self {
         Self {
             lv,
             dir,
@@ -285,12 +288,12 @@ impl CEigenFX {
         }
     }
 
-    fn treat_first_ele(&mut self, bi: CBi) -> bool {
+    pub fn treat_first_ele(&mut self, bi: CBi) -> bool {
         self.ele[0] = Some(CEigen::new(bi, self.kl_dir).unwrap());
         false
     }
 
-    fn treat_second_ele(&mut self, bi: CBi) -> bool {
+    pub fn treat_second_ele(&mut self, bi: CBi) -> bool {
         if let Some(ref mut ele0) = self.ele[0] {
             let combine_dir = ele0.try_add(bi, self.exclude_included, None).unwrap();
             if combine_dir != 0 {
@@ -306,7 +309,7 @@ impl CEigenFX {
         false
     }
 
-    fn treat_third_ele(&mut self, bi: CBi) -> bool {
+    pub fn treat_third_ele(&mut self, bi: CBi) -> bool {
         self.last_evidence_bi = Some(bi.clone());
         if let Some(ref mut ele1) = self.ele[1] {
             let allow_top_equal = if self.exclude_included {
@@ -345,7 +348,7 @@ impl CEigenFX {
         false
     }
 
-    fn add(&mut self, bi: CBi) -> bool {
+    pub fn add(&mut self, bi: CBi) -> bool {
         assert_ne!(bi.dir, self.dir);
         self.lst.push(bi.clone());
         if self.ele[0].is_none() {
@@ -365,7 +368,7 @@ impl CEigenFX {
         }
     }
 
-    fn reset(&mut self) -> bool {
+    pub fn reset(&mut self) -> bool {
         let bi_tmp_list = self.lst[1..].to_vec();
         if self.exclude_included {
             self.clear();
@@ -389,7 +392,7 @@ impl CEigenFX {
         false
     }
 
-    fn can_be_end(&self, bi_lst: &Vec<CBi>) -> bool {
+    pub fn can_be_end(&self, bi_lst: &Vec<CBi>) -> bool {
         if let Some(ref ele1) = self.ele[1] {
             if ele1.gap {
                 if let Some(ref ele0) = self.ele[0] {
@@ -405,19 +408,19 @@ impl CEigenFX {
         false
     }
 
-    fn is_down(&self) -> bool {
+    pub fn is_down(&self) -> bool {
         self.dir == 1
     }
 
-    fn is_up(&self) -> bool {
+    pub fn is_up(&self) -> bool {
         self.dir == -1
     }
 
-    fn get_peak_bi_idx(&self) -> i64 {
+    pub fn get_peak_bi_idx(&self) -> i64 {
         self.ele[1].as_ref().unwrap().get_peak_bi_idx().unwrap()
     }
 
-    fn all_bi_is_sure(&self) -> bool {
+    pub fn all_bi_is_sure(&self) -> bool {
         if let Some(ref last_evidence_bi) = self.last_evidence_bi {
             self.lst.iter().all(|bi| bi.is_sure) && last_evidence_bi.is_sure
         } else {
@@ -425,12 +428,12 @@ impl CEigenFX {
         }
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.ele = vec![None, None, None];
         self.lst = Vec::new();
     }
 
-    fn actual_break(&self) -> bool {
+    pub fn actual_break(&self) -> bool {
         if !self.exclude_included {
             return true;
         }
@@ -457,7 +460,7 @@ impl CEigenFX {
         false
     }
 
-    fn find_revert_fx(
+    pub fn find_revert_fx(
         &self,
         bi_list: &Vec<CBi>,
         begin_idx: i64,
