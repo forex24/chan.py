@@ -14,3 +14,4 @@ gotify_push.py
 cos_config.yaml
 **/target
 **/Cargo.lock
+all_csv.tar.gz

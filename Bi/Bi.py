@@ -210,6 +210,9 @@ class CBi:
         rsi_lst: List[float] = []
         for klc in self.klc_lst:
             rsi_lst.extend(klu.rsi for klu in klc.lst)
+        """
+        1e-7是为了防止除零溢出
+        """
         return 10000.0/(min(rsi_lst)+1e-7) if self.is_down() else max(rsi_lst)
 
     @make_cache
@@ -240,6 +243,9 @@ class CBi:
 
     @make_cache
     def Cal_MACD_half_obverse(self):
+        """
+        以笔最开始的begin_klu对应的Macd值方向为基准，统计范围内这个方向的所有的MACD值的和
+        """
         _s = 1e-7
         begin_klu = self.get_begin_klu()
         peak_macd = begin_klu.macd.macd
@@ -258,6 +264,9 @@ class CBi:
 
     @make_cache
     def Cal_MACD_half_reverse(self):
+        """
+        以笔最后的end_klu对应的macd值方向为基准，统计范围内这个方向的所有macd值的和
+        """
         _s = 1e-7
         begin_klu = self.get_end_klu()
         peak_macd = begin_klu.macd.macd
