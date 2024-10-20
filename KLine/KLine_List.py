@@ -17,6 +17,7 @@ from .KLine_Unit import CKLine_Unit
 
 
 def get_seglist_instance(seg_config: CSegConfig, lv) -> CSegListComm:
+    # 根据配置创建线段列表实例
     if seg_config.seg_algo == "chan":
         from Seg.SegListChan import CSegListChan
         return CSegListChan(seg_config, lv)
@@ -34,24 +35,26 @@ def get_seglist_instance(seg_config: CSegConfig, lv) -> CSegListComm:
 
 class CKLine_List:
     def __init__(self, kl_type, conf: CChanConfig):
+        # 初始化K线列表
         self.kl_type = kl_type
         self.config = conf
-        self.lst: List[CKLine] = []  # K线列表，可递归  元素KLine类型
-        self.bi_list = CBiList(bi_conf=conf.bi_conf)
-        self.seg_list: CSegListComm[CBi] = get_seglist_instance(seg_config=conf.seg_conf, lv=SEG_TYPE.BI)
-        self.segseg_list: CSegListComm[CSeg[CBi]] = get_seglist_instance(seg_config=conf.seg_conf, lv=SEG_TYPE.SEG)
-
-        self.zs_list = CZSList(zs_config=conf.zs_conf)
-        self.segzs_list = CZSList(zs_config=conf.zs_conf)
-
-        self.bs_point_lst = CBSPointList[CBi, CBiList](bs_point_config=conf.bs_point_conf)
-        self.seg_bs_point_lst = CBSPointList[CSeg, CSegListComm](bs_point_config=conf.seg_bs_point_conf)
-
-        self.metric_model_lst = conf.GetMetricModel()
-
-        self.step_calculation = self.need_cal_step_by_step()
+        self.lst: List[CKLine] = []  # K线列表，可递归，元素为KLine类型
+        self.bi_list = CBiList(bi_conf=conf.bi_conf)  # 笔列表
+        self.seg_list: CSegListComm[CBi] = get_seglist_instance(seg_config=conf.seg_conf, lv=SEG_TYPE.BI)  # 线段列表
+        self.segseg_list: CSegListComm[CSeg[CBi]] = get_seglist_instance(seg_config=conf.seg_conf, lv=SEG_TYPE.SEG)  # 线段的线段列表
+        
+        self.zs_list = CZSList(zs_config=conf.zs_conf)  # 中枢列表
+        self.segzs_list = CZSList(zs_config=conf.zs_conf)  # 线段中枢列表
+        
+        self.bs_point_lst = CBSPointList[CBi, CBiList](bs_point_config=conf.bs_point_conf)  # 买卖点列表
+        self.seg_bs_point_lst = CBSPointList[CSeg, CSegListComm](bs_point_config=conf.seg_bs_point_conf)  # 线段买卖点列表
+        
+        self.metric_model_lst = conf.GetMetricModel()  # 指标模型列表
+        
+        self.step_calculation = self.need_cal_step_by_step()  # 是否需要逐步计算
 
     def __deepcopy__(self, memo):
+        # 深拷贝方法，用于创建对象的完整副本
         new_obj = CKLine_List(self.kl_type, self.config)
         memo[id(self)] = new_obj
         for klc in self.lst:
@@ -99,6 +102,7 @@ class CKLine_List:
         return len(self.lst)
 
     def cal_seg_and_zs(self):
+        # 计算线段和中枢
         if not self.step_calculation:
             self.bi_list.try_add_virtual_bi(self.lst[-1])
         cal_seg(self.bi_list, self.seg_list)
@@ -117,6 +121,7 @@ class CKLine_List:
         return self.config.trigger_step
 
     def add_single_klu(self, klu: CKLine_Unit):
+        # 添加单个K线单元
         klu.set_metric(self.metric_model_lst)
         if len(self.lst) == 0:
             self.lst.append(CKLine(klu, idx=0))
@@ -128,15 +133,17 @@ class CKLine_List:
                     self.lst[-2].update_fx(self.lst[-3], self.lst[-1])
                 if self.bi_list.update_bi(self.lst[-2], self.lst[-1], self.step_calculation) and self.step_calculation:
                     self.cal_seg_and_zs()
-            elif self.step_calculation and self.bi_list.try_add_virtual_bi(self.lst[-1], need_del_end=True):  # 这里的必要性参见issue#175
+            elif self.step_calculation and self.bi_list.try_add_virtual_bi(self.lst[-1], need_del_end=True):
                 self.cal_seg_and_zs()
 
     def klu_iter(self, klc_begin_idx=0):
+        # K线单元迭代器
         for klc in self.lst[klc_begin_idx:]:
             yield from klc.lst
 
 
 def cal_seg(bi_list, seg_list: CSegListComm):
+    # 计算线段
     seg_list.update(bi_list)
 
     sure_seg_cnt = 0
@@ -168,6 +175,7 @@ def cal_seg(bi_list, seg_list: CSegListComm):
 
 
 def update_zs_in_seg(bi_list, seg_list, zs_list):
+    # 更新线段中的中枢
     sure_seg_cnt = 0
     for seg in seg_list[::-1]:
         if seg.ele_inside_is_sure:

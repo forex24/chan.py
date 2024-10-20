@@ -43,21 +43,33 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
         return not has_overlap(self.get_klu_min_low(), self.get_klu_max_high(), self.next.get_klu_min_low(), self.next.get_klu_max_high(), equal=True)
 
     def check_fx_valid(self, item2: "CKLine", method, for_virtual=False):
-        # for_virtual: 虚笔时使用
+        # 检查两个分型之间是否构成有效的走势
+        # self: 当前K线组合
+        # item2: 待比较的K线组合
+        # method: 分型检查方法
+        # for_virtual: 是否用于虚笔判断
+
+        # 确保当前K线组合和item2都有前后相邻的K线组合
         assert self.next is not None and item2.pre is not None
         assert self.pre is not None
+        # 确保item2的索引大于当前K线组合的索引
         assert item2.idx > self.idx
-        if self.fx == FX_TYPE.TOP:
+
+        if self.fx == FX_TYPE.TOP:  # 当前为顶分型
+            # 确保item2为底分型（虚笔情况除外）
             assert for_virtual or item2.fx == FX_TYPE.BOTTOM
+            # 虚笔情况下，如果item2不是向下方向，则无效
             if for_virtual and item2.dir != KLINE_DIR.DOWN:
                 return False
-            if method == FX_CHECK_METHOD.HALF:  # 检测前两KLC
+
+            # 根据不同的检查方法，计算比较用的高点和低点
+            if method == FX_CHECK_METHOD.HALF:  # 半分型，检查前两个K线组合
                 item2_high = max([item2.pre.high, item2.high])
                 self_low = min([self.low, self.next.low])
-            elif method == FX_CHECK_METHOD.LOSS:  # 只检测顶底分形KLC
+            elif method == FX_CHECK_METHOD.LOSS:  # 缺口，只检查顶底分型K线组合
                 item2_high = item2.high
                 self_low = self.low
-            elif method in (FX_CHECK_METHOD.STRICT, FX_CHECK_METHOD.TOTALLY):
+            elif method in (FX_CHECK_METHOD.STRICT, FX_CHECK_METHOD.TOTALLY):  # 严格和完全包含
                 if for_virtual:
                     item2_high = max([item2.pre.high, item2.high])
                 else:
@@ -66,14 +78,21 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
                 self_low = min([self.pre.low, self.low, self.next.low])
             else:
                 raise CChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
+
+            # 根据检查方法返回结果
             if method == FX_CHECK_METHOD.TOTALLY:
-                return self.low > item2_high
+                return self.low > item2_high  # 完全包含
             else:
-                return self.high > item2_high and item2.low < self_low
-        elif self.fx == FX_TYPE.BOTTOM:
+                return self.high > item2_high and item2.low < self_low  # 其他情况
+
+        elif self.fx == FX_TYPE.BOTTOM:  # 当前为底分型
+            # 确保item2为顶分型（虚笔情况除外）
             assert for_virtual or item2.fx == FX_TYPE.TOP
+            # 虚笔情况下，如果item2不是向上方向，则无效
             if for_virtual and item2.dir != KLINE_DIR.UP:
                 return False
+
+            # 根据不同的检查方法，计算比较用的高点和低点
             if method == FX_CHECK_METHOD.HALF:
                 item2_low = min([item2.pre.low, item2.low])
                 cur_high = max([self.high, self.next.high])
@@ -89,9 +108,12 @@ class CKLine(CKLine_Combiner[CKLine_Unit]):
                 cur_high = max([self.pre.high, self.high, self.next.high])
             else:
                 raise CChanException("bi_fx_check config error!", ErrCode.CONFIG_ERROR)
+
+            # 根据检查方法返回结果
             if method == FX_CHECK_METHOD.TOTALLY:
-                return self.high < item2_low
+                return self.high < item2_low  # 完全包含
             else:
-                return self.low < item2_low and item2.high > cur_high
+                return self.low < item2_low and item2.high > cur_high  # 其他情况
+
         else:
             raise CChanException("only top/bottom fx can check_valid_top_button", ErrCode.BI_ERR)

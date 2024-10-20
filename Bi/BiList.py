@@ -147,19 +147,37 @@ class CBiList:
             self.bi_list[-1].pre = self.bi_list[-2]
 
     def satisfy_bi_span(self, klc: CKLine, last_end: CKLine):
+        # 检查两个K线组合之间是否满足笔的跨度要求
+        # klc: 当前K线组合
+        # last_end: 上一笔的结束K线组合
+
+        # 获取两个K线组合之间的跨度
         bi_span = self.get_klc_span(klc, last_end)
+
+        # 如果配置为严格模式，则跨度必须大于等于4
         if self.config.is_strict:
             return bi_span >= 4
-        uint_kl_cnt = 0
-        tmp_klc = last_end.next
+
+        # 非严格模式下的处理
+        uint_kl_cnt = 0  # 统计包含的基本K线数量
+        tmp_klc = last_end.next  # 从上一笔结束的下一个K线组合开始
+
         while tmp_klc:
+            # 累加当前K线组合包含的基本K线数量
             uint_kl_cnt += len(tmp_klc.lst)
-            if not tmp_klc.next:  # 最后尾部虚笔的时候，可能klc.idx == last_end.idx+1
+
+            # 处理最后一个虚笔的特殊情况
+            if not tmp_klc.next:
+                # 如果是最后一个K线组合，且klc紧接在last_end之后，则不满足笔的条件
                 return False
+
+            # 如果下一个K线组合的索引小于当前klc的索引，继续循环
             if tmp_klc.next.idx < klc.idx:
                 tmp_klc = tmp_klc.next
             else:
                 break
+
+        # 非严格模式下，要求跨度大于等于3且包含的基本K线数量大于等于3
         return bi_span >= 3 and uint_kl_cnt >= 3
 
     def get_klc_span(self, klc: CKLine, last_end: CKLine) -> int:
@@ -176,13 +194,26 @@ class CBiList:
         return span
 
     def can_make_bi(self, klc: CKLine, last_end: CKLine, for_virtual: bool = False):
+        # 判断是否可以形成一笔
+        
+        # 1. 检查是否满足笔的跨度要求
+        # 如果配置的笔算法为'fx'，则直接满足跨度要求
+        # 否则，调用satisfy_bi_span方法检查是否满足跨度
         satisify_span = True if self.config.bi_algo == 'fx' else self.satisfy_bi_span(klc, last_end)
         if not satisify_span:
             return False
+        
+        # 2. 检查分型是否有效
+        # 使用last_end的check_fx_valid方法检查klc是否为有效的相反分型
+        # 传入配置的bi_fx_check参数和for_virtual标志
         if not last_end.check_fx_valid(klc, self.config.bi_fx_check, for_virtual):
             return False
+        
+        # 3. 如果配置要求笔的端点必须是峰谷，则进行额外检查
         if self.config.bi_end_is_peak and not end_is_peak(last_end, klc):
             return False
+        
+        # 满足所有条件，可以形成一笔
         return True
 
     def try_update_end(self, klc: CKLine, for_virtual=False) -> bool:
