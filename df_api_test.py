@@ -3,6 +3,17 @@ from ChanConfig import CChanConfig
 from Common.CEnum import AUTYPE, BSP_TYPE, DATA_SRC, FX_TYPE, KL_TYPE
 from Common.CEnum import DATA_FIELD
 import pandas as pd
+import os
+import errno
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
 
 if __name__ == "__main__":
     """
@@ -11,7 +22,7 @@ if __name__ == "__main__":
     """
     df = pd.read_csv('/opt/data/eurusd.csv')
     print("csv readed")
-    #df[DATA_FIELD.FIELD_TIME]=pd.to_datetime(df[DATA_FIELD.FIELD_TIME])
+    
     code = df
     begin_time = "2021-01-01"
     end_time = "2021-02-01"
@@ -55,3 +66,6 @@ if __name__ == "__main__":
             sell_price = cur_lv_chan[-1][-1].close
             print(f'{cur_lv_chan[-1][-1].time}:sell price = {sell_price}, profit rate = {(sell_price-last_buy_price)/last_buy_price*100:.2f}%')
             is_hold = False
+    
+    mkdir_p("test_chan")
+    chan.save_to_csv("test_chan")
