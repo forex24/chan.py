@@ -26,7 +26,7 @@ if __name__ == "__main__":
     
     code = df
     begin_time = "2021-01-01"
-    end_time = "2022-01-01"
+    end_time = "2021-04-01"
     data_src = DATA_SRC.DATAFRAME
     lv_list = [KL_TYPE.K_1M]
 
