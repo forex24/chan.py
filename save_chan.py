@@ -17,10 +17,11 @@ def mkdir_p(path):
 
 if __name__ == "__main__":
     """
-    一个极其弱智的策略，只交易一类买卖点，底分型形成后就开仓，直到一类卖点顶分型形成后平仓
-    只用做展示如何自己实现策略，做回测用~
+    用于把缠论元素保存到dataframe中
+    需要把KLine_List里的to_dataframe细化
     """
-    df = pd.read_csv('/opt/data/eurusd.csv')
+    symbol = "eurusd"
+    df = pd.read_csv(f'/opt/data/{symbol}.csv')
     print("csv readed")
     
     code = df
@@ -45,13 +46,16 @@ if __name__ == "__main__":
         autype=AUTYPE.QFQ,
     )
 
-    is_hold = False
-    last_buy_price = None
+    #is_hold = False
+    #last_buy_price = None
+    last_bsp_list = []
     for chan_snapshot in chan.step_load():  # 每增加一根K线，返回当前静态精算结果
         bsp_list = chan_snapshot.get_bsp()  # 获取买卖点列表
         if not bsp_list:  # 为空
             continue
         last_bsp = bsp_list[-1]  # 最后一个买卖点
+        last_bsp_list.append(last_bsp)
+        """
         print("last_bsp:", last_bsp)
         if BSP_TYPE.T1 not in last_bsp.type and BSP_TYPE.T1P not in last_bsp.type:  # 假如只做1类买卖点
             continue
@@ -66,6 +70,16 @@ if __name__ == "__main__":
             sell_price = cur_lv_chan[-1][-1].close
             print(f'{cur_lv_chan[-1][-1].time}:sell price = {sell_price}, profit rate = {(sell_price-last_buy_price)/last_buy_price*100:.2f}%')
             is_hold = False
+        """
     
-    mkdir_p("test_chan")
-    chan.save_to_csv("test_chan")
+    last_bsp_df = pd.DataFrame([
+                {
+                    'bsp_type': bsp.type2str(),
+                    'bi_idx': bsp.bi.idx if bsp.bi else None,
+                    'time': bsp.klu.time,
+                } for bsp in last_bsp_list
+            ])
+    directory = "test_chan"
+    mkdir_p(directory)
+    last_bsp_df.to_csv(os.path.join(directory, "last_bsp.csv"))
+    chan[0].to_csv(directory)

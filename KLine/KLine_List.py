@@ -1,5 +1,8 @@
 import copy
-from typing import List, Union, overload
+import os
+from typing import Dict, List, Union, overload
+
+import pandas as pd
 
 from Bi.Bi import CBi
 from Bi.BiList import CBiList
@@ -134,6 +137,149 @@ class CKLine_List:
     def klu_iter(self, klc_begin_idx=0):
         for klc in self.lst[klc_begin_idx:]:
             yield from klc.lst
+
+    def to_dataframes(self) -> Dict[str, pd.DataFrame]:
+            dataframes = {}
+    
+            # Convert lst to DataFrame
+            dataframes['kline_list'] = pd.DataFrame([
+                {
+                    'idx': kl.idx,
+                    'dir': kl.dir,
+                    'high': kl.high,
+                    'low': kl.low,
+                    'begin_time': kl.time_begin,
+                    'end_time': kl.time_end,
+                    'fx': kl.fx
+                } for kl in self.lst
+            ])
+    
+            # Convert bi_list to DataFrame
+            dataframes['bi_list'] = pd.DataFrame([
+                {
+                    'idx': bi.idx,
+                    'dir': bi.dir,
+                    'high':bi._high(),
+                    'low':bi._low(),                    
+                    'type': bi.type,
+                    'is_sure': bi.is_sure,
+                    'seg_idx':bi.seg_idx,
+                    'parent_seg':bi.parent_seg.idx if bi.parent_seg else None,
+                    'begin_time': bi.begin_klc.time_begin,
+                    'end_time': bi.end_klc.time_end,
+                    'begin_klc':bi.begin_klc.idx,
+                    'end_klc':bi.end_klc.idx,
+                    'begin_val':bi.get_begin_val(),
+                    'end_val':bi.get_end_val(),
+                    'klu_cnt':bi.get_klu_cnt(),
+                    'klc_cnt':bi.get_klc_cnt(),
+                } for bi in self.bi_list
+            ])
+    
+            # Convert seg_list to DataFrame
+            dataframes['seg_list'] = pd.DataFrame([
+                {
+                    'idx': seg.idx,
+                    'dir': seg.dir,
+                    'high': seg._high(),
+                    'low': seg._low(),
+                    'is_sure': seg.is_sure,
+                    'start_bi_idx': seg.start_bi.idx if seg.start_bi else None,
+                    'end_bi_idx': seg.end_bi.idx if seg.end_bi else None
+                } for seg in self.seg_list
+            ])
+    
+            # Convert segseg_list to DataFrame
+            dataframes['segseg_list'] = pd.DataFrame([
+                {
+                    'idx': segseg.idx,
+                    'dir': segseg.dir,
+                    'high': segseg._high(),
+                    'low': segseg._low(),
+                    'is_sure': segseg.is_sure,
+                    'start_seg_idx': segseg.start_bi.idx if segseg.start_bi else None,
+                    'end_seg_idx': segseg.end_bi.idx if segseg.end_bi else None
+                } for segseg in self.segseg_list
+            ])
+    
+            # Convert zs_list to DataFrame
+            dataframes['zs_list'] = pd.DataFrame([
+                {
+                    #'idx': zs.idx,
+                    #'zs_type': zs.zs_type,
+                    #'begin_time': zs.begin_time,
+                    #'end_time': zs.end_time,
+                    'high': zs.high,
+                    'low': zs.low,
+                    'peak_high':zs.peak_high,
+                    'peak_low':zs.peak_low,
+                    'is_sure': zs.is_sure,
+                    'begin_bi_idx': zs.begin_bi.idx if zs.begin_bi else None,
+                    'end_bi_idx': zs.end_bi.idx if zs.end_bi else None,
+                    'bi_in':zs.bi_in.idx if zs.bi_in else None,
+                    'bi_out':zs.bi_out.idx if zs.bi_out else None,
+                } for zs in self.zs_list
+            ])
+    
+            # Convert segzs_list to DataFrame
+            dataframes['segzs_list'] = pd.DataFrame([
+                {
+                    #'idx': segzs.idx,
+                    #'zs_type': segzs.zs_type,
+                    #'begin_time': segzs.begin_time,
+                    #'end_time': segzs.end_time,
+                    'high': segzs.high,
+                    'low': segzs.low,
+                    'peak_high':segzs.peak_high,
+                    'peak_low':segzs.peak_low,
+                    'is_sure': segzs.is_sure,                    
+                    'begin_seg_idx': segzs.begin_bi.idx if segzs.begin_bi else None,
+                    'end_seg_idx': segzs.end_bi.idx if segzs.end_bi else None,
+                    'bi_in':segzs.bi_in.idx if segzs.bi_in else None,
+                    'bi_out':segzs.bi_out.idx if segzs.bi_out else None,
+
+                } for segzs in self.segzs_list
+            ])
+    
+            # Convert bs_point_lst to DataFrame
+            dataframes['bs_point_lst'] = pd.DataFrame([
+                {
+                    #'idx': bsp.idx,
+                    'bsp_type': bsp.type2str(),
+                    'bi_idx': bsp.bi.idx if bsp.bi else None,
+                    'time': bsp.klu.time,
+                } for bsp in self.bs_point_lst
+            ])
+    
+            # Convert seg_bs_point_lst to DataFrame
+            dataframes['seg_bs_point_lst'] = pd.DataFrame([
+                {
+                    #'idx': seg_bsp.idx,
+                    'bsp_type': seg_bsp.type2str(),
+                    'seg_idx': seg_bsp.bi.idx if seg_bsp.bi else None,
+                    'time': seg_bsp.klu.time,
+                } for seg_bsp in self.seg_bs_point_lst
+            ])
+    
+            return dataframes
+    
+    def to_csv(self, directory: str = "output") -> None:
+        """
+        将所有的 DataFrame 保存为 CSV 文件。
+
+        :param directory: 保存 CSV 文件的目录，默认为 "output"
+        """
+        # 确保输出目录存在
+        os.makedirs(directory, exist_ok=True)
+
+        # 获取所有的 DataFrame
+        dataframes = self.to_dataframes()
+
+        # 遍历并保存每个 DataFrame
+        for name, df in dataframes.items():
+            file_path = os.path.join(directory, f"{name}.csv")
+            df.to_csv(file_path, index=False)
+            print(f"Saved {name} to {file_path}")
 
 
 def cal_seg(bi_list, seg_list: CSegListComm):
