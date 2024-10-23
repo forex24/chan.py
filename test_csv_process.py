@@ -131,7 +131,7 @@ def load_csv(filename):
     df.sort_values(by='timestamp',inplace=True)
     return df
 
-def split_df(df, freq):
+def split_dataframe(df, freq):
     length = len(df)
     overlap_size = int(DEFAULT_MAX_COUNT * OVERLAP_RATIO)
     step_size = DEFAULT_MAX_COUNT - overlap_size
@@ -186,7 +186,7 @@ def parse_symbol(symbol):
     all_splits = {}
     for freq in timeframe:
         freq_df = resample_timeframe(df, freq)
-        all_splits[freq] = split_df(freq_df, freq)
+        all_splits[freq] = split_dataframe(freq_df, freq)
 
     # 现在 all_splits 是一个字典，键是时间频率，值是该频率下的 DataFrame 列表
     # 您可以根据需要使用这些分割后的 DataFrame
@@ -221,7 +221,9 @@ def parse_symbol(symbol):
 
 if __name__ == "__main__":
     # 获取命令行参数，默认为 'eurusd'
-    symbols = get_all_symbols('/opt/data')
+    direction = '/opt/data'
+    symbols = get_all_symbols(direction)
+    print(symbols)
     for symbol in symbols:
-        parse_symbol(symbol)
+        parse_symbol(f'{direction}/{symbol}')
 
