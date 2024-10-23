@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     请注意，demo训练预测都用的是同一份数据，这是不合理的，仅仅是为了演示
     """
-    code = "eurusd"
+    code = "eurusd_1h"
     train_begin_time = "2020-01-01"
     train_end_time = "2021-06-30"
     test_begin_time = "2021-07-01"

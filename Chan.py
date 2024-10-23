@@ -116,88 +116,47 @@ class CChan:
                 raise
 
     def step_load(self):
-        # 步进加载方法，用于逐步加载和处理数据
-        
-        # 确保配置中的trigger_step为True，即启用了步进模式
         assert self.conf.trigger_step
-
-        # 初始化数据，清空之前的数据以防止重复运行时出现问题
-        self.do_init()
-
-        # 标记是否曾经返回过结果
-        yielded = False
-
-        # 遍历load方法生成的每个数据快照
+        self.do_init()  # 清空数据，防止再次重跑没有数据
+        yielded = False  # 是否曾经返回过结果
         for idx, snapshot in enumerate(self.load(self.conf.trigger_step)):
-            # 如果当前索引小于配置的跳过步数，则继续下一次循环
             if idx < self.conf.skip_step:
                 continue
-            
-            # 返回当前数据快照
             yield snapshot
-            
-            # 标记已经返回过结果
             yielded = True
-
-        # 如果整个过程中没有返回过结果（可能是因为skip_step设置过大）
-        # 则至少返回一次当前对象的状态
         if not yielded:
             yield self
 
-    """
-    整个数据加载过程的核心,包含了递归加载不同级别K线数据的逻辑。
-    """
     def trigger_load(self, inp):
-        # 触发加载新数据的方法
-        # inp: 输入数据，格式为 {级别: [K线单元, ...]}
-
-        # 初始化K线单元缓存，如果还没有的话
+        # {type: [klu, ...]}
         if not hasattr(self, 'klu_cache'):
             self.klu_cache: List[Optional[CKLine_Unit]] = [None for _ in self.lv_list]
-
-        # 初始化每个级别的最后时间，如果还没有的话
         if not hasattr(self, 'klu_last_t'):
             self.klu_last_t = [CTime(1980, 1, 1, 0, 0) for _ in self.lv_list]
-
-        # 遍历所有级别
         for lv_idx, lv in enumerate(self.lv_list):
             if lv not in inp:
-                # 如果最高级别没有数据，抛出异常
                 if lv_idx == 0:
                     raise CChanException(f"最高级别{lv}没有传入数据", ErrCode.NO_DATA)
                 continue
-
-            # 为每个K线单元设置级别类型
             for klu in inp[lv]:
                 klu.kl_type = lv
-
-            # 确保输入数据是列表类型
             assert isinstance(inp[lv], list)
-
-            # 将输入数据转换为迭代器并添加到相应级别
             self.add_lv_iter(lv, iter(inp[lv]))
-
-        # 从最高级别开始，逐级加载数据
         for _ in self.load_iterator(lv_idx=0, parent_klu=None, step=False):
             ...
-
-        # 如果不是回放模式，在全部数据加载完成后计算中枢和线段
-        if not self.conf.trigger_step:
+        if not self.conf.trigger_step:  # 非回放模式全部算完之后才算一次中枢和线段
             for lv in self.lv_list:
                 self.kl_datas[lv].cal_seg_and_zs()
 
     def init_lv_klu_iter(self, stockapi_cls):
-        # 初始化各个级别的K线单元迭代器
-        # 目是跳过一些获取数据失败的级别
+        # 为了跳过一些获取数据失败的级别
         lv_klu_iter = []
         valid_lv_list = []
         for lv in self.lv_list:
             try:
-                # 尝试获取该级别的数据迭代器
                 lv_klu_iter.append(self.get_load_stock_iter(stockapi_cls, lv))
                 valid_lv_list.append(lv)
             except CChanException as e:
-                # 如果是数据未找到错误，且配置允许自动跳过非法子级别
                 if e.errcode == ErrCode.SRC_DATA_NOT_FOUND and self.conf.auto_skip_illegal_sub_lv:
                     if self.conf.print_warning:
                         print(f"[WARNING-{self.code}]{lv}级别获取数据失败，跳过")
@@ -208,9 +167,7 @@ class CChan:
         return lv_klu_iter
 
     def GetStockAPI(self):
-        # 根据数据源类型返回相应的API类
         _dict = {}
-        # 初始化各种数据源的API类
         if self.data_src == DATA_SRC.BAO_STOCK:
             from DataAPI.BaoStockAPI import CBaoStock
             _dict[DATA_SRC.BAO_STOCK] = CBaoStock
@@ -220,12 +177,8 @@ class CChan:
         elif self.data_src == DATA_SRC.CSV:
             from DataAPI.csvAPI import CSV_API
             _dict[DATA_SRC.CSV] = CSV_API
-        elif self.data_src == DATA_SRC.DATAFRAME:
-            from DataAPI.dataframeAPI import DATAFRAME_API
-            _dict[DATA_SRC.DATAFRAME] = DATAFRAME_API
         if self.data_src in _dict:
             return _dict[self.data_src]
-        # 处理自定义数据源
         assert isinstance(self.data_src, str)
         if self.data_src.find("custom:") < 0:
             raise CChanException("load src type error", ErrCode.SRC_DATA_TYPE_ERR)
@@ -235,19 +188,16 @@ class CChan:
         return eval(cls_name)
 
     def load(self, step=False):
-        # 加载数据的主方法
         stockapi_cls = self.GetStockAPI()
         try:
             stockapi_cls.do_init()
-            # 初始化各级别的迭代器
             for lv_idx, klu_iter in enumerate(self.init_lv_klu_iter(stockapi_cls)):
                 self.add_lv_iter(lv_idx, klu_iter)
-            self.klu_cache = [None for _ in self.lv_list]
+            self.klu_cache: List[Optional[CKLine_Unit]] = [None for _ in self.lv_list]
             self.klu_last_t = [CTime(1980, 1, 1, 0, 0) for _ in self.lv_list]
 
-            # 开始加载数据
-            yield from self.load_iterator(lv_idx=0, parent_klu=None, step=step)
-            if not step:  # 非回放模式下，计算所有级别的中枢和线段
+            yield from self.load_iterator(lv_idx=0, parent_klu=None, step=step)  # 计算入口
+            if not step:  # 非回放模式全部算完之后才算一次中枢和线段
                 for lv in self.lv_list:
                     self.kl_datas[lv].cal_seg_and_zs()
         except Exception:
@@ -280,59 +230,37 @@ class CChan:
             kline_unit.set_idx(self[lv_idx][-1][-1].idx + 1)
 
     def load_iterator(self, lv_idx, parent_klu, step):
-        # 递归加载各级别的K线数据
-        # lv_idx: 当前处理的级别索引
-        # parent_klu: 父级别的K线单元
-        # step: 是否为步进模式
-
-        # 获取当前级别
+        # K线时间天级别以下描述的是结束时间，如60M线，每天第一根是10点30的
+        # 天以上是当天日期
         cur_lv = self.lv_list[lv_idx]
-        
-        # 获取当前级别的最后一个K线单元，如果存在的话
         pre_klu = self[lv_idx][-1][-1] if len(self[lv_idx]) > 0 and len(self[lv_idx][-1]) > 0 else None
-
         while True:
-            # 获取下一个K线单元
             if self.klu_cache[lv_idx]:
-                # 如果缓存中有数据，直接使用缓存的K线单元
                 kline_unit = self.klu_cache[lv_idx]
                 assert kline_unit is not None
                 self.klu_cache[lv_idx] = None
             else:
                 try:
-                    # 尝试获取下一个K线单元
                     kline_unit = self.get_next_lv_klu(lv_idx)
                     self.try_set_klu_idx(lv_idx, kline_unit)
-                    
-                    # 检查K线时间的单调性
                     if not kline_unit.time > self.klu_last_t[lv_idx]:
                         raise CChanException(f"kline time err, cur={kline_unit.time}, last={self.klu_last_t[lv_idx]}", ErrCode.KL_NOT_MONOTONOUS)
                     self.klu_last_t[lv_idx] = kline_unit.time
                 except StopIteration:
-                    # 如果没有更多的K线单元，结束循环
                     break
 
-            # 处理父级别K线
             if parent_klu and kline_unit.time > parent_klu.time:
-                # 如果当前K线单元的时间超过了父级别K线的时间，将其缓存并结束循环
                 self.klu_cache[lv_idx] = kline_unit
                 break
-            
-            # 设置K线关系并添加到数据结构中
             kline_unit.set_pre_klu(pre_klu)
             pre_klu = kline_unit
             self.add_new_kl(cur_lv, kline_unit)
             if parent_klu:
                 self.set_klu_parent_relation(parent_klu, kline_unit, cur_lv, lv_idx)
-            
-            # 递归处理下一级别
             if lv_idx != len(self.lv_list)-1:
-                # 如果不是最低级别，递归处理下一级别
                 for _ in self.load_iterator(lv_idx+1, kline_unit, step):
-                    ...  # 这里可能会进行一些处理，但在当前代码中是空的
+                    ...
                 self.check_kl_align(kline_unit, lv_idx)
-            
-            # 如果是最高级别且为步进模式，则yield当前状态
             if lv_idx == 0 and step:
                 yield self
 
@@ -367,4 +295,3 @@ class CChan:
             return sorted(self[idx].bs_point_lst.lst, key=lambda x: x.klu.time)
         assert len(self.lv_list) == 1
         return sorted(self[0].bs_point_lst.lst, key=lambda x: x.klu.time)
-
