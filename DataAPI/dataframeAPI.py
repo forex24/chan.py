@@ -65,7 +65,14 @@ class DATAFRAME_API(CCommonStockApi):
     def get_kl_data(self):
         if self.df is None:
             raise CChanException("DataFrame is not provided", ErrCode.SRC_DATA_NOT_FOUND)
-        self.df = self.df[(self.df[DATA_FIELD.FIELD_TIME] >= self.begin_date) & (self.df[DATA_FIELD.FIELD_TIME] < self.end_date)]
+
+        if self.begin_date is not None and self.end_date is not None:
+            self.df = self.df[(self.df[DATA_FIELD.FIELD_TIME] >= self.begin_date) & (self.df[DATA_FIELD.FIELD_TIME] < self.end_date)]
+        elif self.begin_date is not None:
+            self.df = self.df[self.df[DATA_FIELD.FIELD_TIME] >= self.begin_date]
+        elif self.end_date is not None:
+            self.df = self.df[self.df[DATA_FIELD.FIELD_TIME] < self.end_date]
+        
         for _, row in self.df.iterrows():
             data = row.tolist()
             yield CKLine_Unit(create_item_dict(data, self.columns))
