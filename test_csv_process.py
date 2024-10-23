@@ -211,8 +211,8 @@ def parse_symbol(symbol):
             #chan_lab(split_df, f"{symbol}_{freq}_{i}")
             #split_df['timetamp'] = str(split_df['timestamp'])
             print(split_df.info())
-            label(split_df, f"{symbol}_{freq}_{i}", start, end)
-            #tasks.append(delayed(label)(split_df, f"{symbol}_{freq}_{i}", start, end))
+            #label(split_df, f"{symbol}_{freq}_{i}", start, end)
+            tasks.append(delayed(label)(split_df, f"{symbol}_{freq}_{i}", start, end))
 
     res = multi_work(tasks)
     print(res)
