@@ -15,3 +15,7 @@ cos_config.yaml
 **/target
 **/Cargo.lock
 all_csv.tar.gz
+**/.DS_Store
+label.png
+model.json
+

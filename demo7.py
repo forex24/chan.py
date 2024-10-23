@@ -56,9 +56,9 @@ if __name__ == "__main__":
 
     请注意，demo训练预测都用的是同一份数据，这是不合理的，仅仅是为了演示
     """
-    code = "eurusd_1h"
+    code = "eurusd"
     train_begin_time = "2020-01-01"
-    train_end_time = "2021-06-30"
+    train_end_time = "2021-01-01"
     test_begin_time = "2021-07-01"
     test_end_time = "2021-12-31"
     data_src = DATA_SRC.CSV
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     )
 
     train_bsp_dict: Dict[int, T_SAMPLE_INFO] = {}  # 存储策略产出的bsp的特征
-
+    bsp_count = 0
     # 跑策略，保存买卖点的特征
     for chan_snapshot in train_chan.step_load():
         last_klu = chan_snapshot[0][-1][-1]
@@ -110,7 +110,10 @@ if __name__ == "__main__":
             }
             train_bsp_dict[last_bsp.klu.idx]['feature'].add_feat(stragety_feature(last_klu))  # 开仓K线特征
             print(last_bsp.klu.time, last_bsp.is_buy)
+            bsp_count = bsp_count + 1
 
+    # print bsp_count
+    print("bsp_count:", bsp_count)
     # 生成libsvm样本特征
     train_bsp_academy = [bsp.klu.idx for bsp in train_chan.get_bsp()]
     feature_meta = {}  # 特征meta
