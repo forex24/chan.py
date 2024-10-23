@@ -12,15 +12,22 @@ from .CommonStockAPI import CCommonStockApi
 def create_item_dict(data, column_name):
     for i in range(len(data)):
         data[i] = parse_time_column(data[i]) if column_name[i] == DATA_FIELD.FIELD_TIME else float(data[i])
+
     return dict(zip(column_name, data))
 
-"""
 def parse_time_column(inp):
+    # 如果inp是Timestamp类型调用parse_time_column_by_datetime
+    if isinstance(inp, pd.Timestamp):
+        return parse_time_column_by_datetime(inp)
+    else:
+        return parse_time_column_by_str(inp)
+        
+def parse_time_column_by_datetime(inp):
     print("time:",inp)
     return CTime(inp.year, inp.month, inp.day, inp.hour, inp.minute)
-"""
 
-def parse_time_column(inp):
+
+def parse_time_column_by_str(inp):
     # 20210902113000000
     # 2021-09-13
     if len(inp) == 10:
