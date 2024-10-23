@@ -9,7 +9,7 @@ if __name__ == "__main__":
     一个极其弱智的策略，只交易一类买卖点，底分型形成后就开仓，直到一类卖点顶分型形成后平仓
     只用做展示如何自己实现策略，做回测用~
     """
-    df = pd.read_csv('/opt/data/eurusd_1h.csv')
+    df = pd.read_csv('/opt/data/eurusd.csv')
     print("csv readed")
     #df[DATA_FIELD.FIELD_TIME]=pd.to_datetime(df[DATA_FIELD.FIELD_TIME])
     code = df
