@@ -171,7 +171,7 @@ def chan_lab(base_path, symbol, start, end):
     )
 
     bsp_dict: Dict[int, T_SAMPLE_INFO] = {}  # 存储策略产出的bsp的特征
-
+    last_bsp_list=[]
     # 跑策略，保存买卖点的特征
     for chan_snapshot in chan.step_load():
         last_klu = chan_snapshot[0][-1][-1]
@@ -179,6 +179,13 @@ def chan_lab(base_path, symbol, start, end):
         if not bsp_list:
             continue
         last_bsp = bsp_list[-1]
+
+        if len(last_bsp_list) != 0:
+            last = last_bsp_list[-1]
+            if last is not None:
+                if last_bsp.klu.time == last.klu.time:
+                    continue
+        last_bsp_list.append(last_bsp)
 
         cur_lv_chan = chan_snapshot[0]
         if last_bsp.klu.idx not in bsp_dict and cur_lv_chan[-2].idx == last_bsp.klu.klc.idx:
@@ -191,6 +198,19 @@ def chan_lab(base_path, symbol, start, end):
             }
             bsp_dict[last_bsp.klu.idx]['feature'].add_feat(stragety_feature(last_klu))  # 开仓K线特征
             print(last_bsp.klu.time, last_bsp.is_buy, last_bsp.type2str())
+
+    last_bsp_df = pd.DataFrame([
+                {
+                    'is_buy': bsp.is_buy,
+                    'bsp_type': bsp.type2str(),
+                    'bi_idx': bsp.bi.idx if bsp.bi else None,
+                    'time': bsp.klu.time,
+                } for bsp in last_bsp_list
+            ])
+    directory = f"{symbol}_save_{start.strftime('%Y_%m_%d')}_{end.strftime('%Y_%m_%d')}"
+    mkdir_p(directory)
+    last_bsp_df.to_csv(os.path.join(directory, "last_bsp.csv"), index=False)
+    chan[0].to_csv(directory)
 
     # 生成libsvm样本特征
     bsp_academy = [bsp.klu.idx for bsp in chan.get_bsp()]
