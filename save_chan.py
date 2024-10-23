@@ -54,6 +54,12 @@ if __name__ == "__main__":
         if not bsp_list:  # 为空
             continue
         last_bsp = bsp_list[-1]  # 最后一个买卖点
+
+        if len(last_bsp_list) != 0:
+            last = last_bsp_list[-1]
+            if last is not None:
+                if last_bsp.klu.time == last.klu.time:
+                    continue
         last_bsp_list.append(last_bsp)
         """
         print("last_bsp:", last_bsp)
@@ -81,5 +87,5 @@ if __name__ == "__main__":
             ])
     directory = "test_chan"
     mkdir_p(directory)
-    last_bsp_df.to_csv(os.path.join(directory, "last_bsp.csv"))
+    last_bsp_df.to_csv(os.path.join(directory, "last_bsp.csv"), index=False)
     chan[0].to_csv(directory)
