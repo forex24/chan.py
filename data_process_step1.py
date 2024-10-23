@@ -220,8 +220,10 @@ def parse_symbol(symbol):
 
 
 if __name__ == "__main__":
-    # 获取命令行参数，默认为 'eurusd'
-    direction = '/opt/data'
+    if len(sys.argv) > 1:
+        direction = sys.argv[1]
+    else:
+        direction = '/opt/data'
     symbols = get_all_symbols(direction)
     print(symbols)
     for symbol in symbols:
