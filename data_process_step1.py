@@ -381,4 +381,4 @@ if __name__ == "__main__":
     for symbol in symbols:
         symbol_directory = f'{directory}/{symbol}'
         parse_symbol(symbol_directory)
-        merge_csv_files(symbol_directory)
+        merge_csv_files(directory)

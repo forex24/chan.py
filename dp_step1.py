@@ -370,15 +370,15 @@ def test_merge_csv_files():
 
 
 if __name__ == "__main__":
-    test_merge_csv_files()
-    #if len(sys.argv) > 1:
-    #    directory = sys.argv[1]
-    #else:
-    #    directory = '/opt/data'
-    #
-    #symbols = get_all_symbols(directory)
-    #print(symbols)
-    #for symbol in symbols:
-    #    symbol_directory = f'{directory}/{symbol}'
-    #    parse_symbol(symbol_directory)
+    if len(sys.argv) > 1:
+        directory = sys.argv[1]
+    else:
+        directory = '/opt/data'
+
+
+    symbols = get_all_symbols(directory)
+    print(symbols)
+    for symbol in symbols:
+        symbol_directory = f'{directory}/{symbol}'
+        parse_symbol(symbol_directory)
     #    merge_csv_files(symbol_directory)
