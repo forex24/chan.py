@@ -6,6 +6,7 @@ class DATA_SRC(Enum):
     BAO_STOCK = auto()
     CCXT = auto()
     CSV = auto()
+    DATAFRAME = auto()
 
 
 class KL_TYPE(Enum):
@@ -124,7 +125,7 @@ class MACD_ALGO(Enum):
 
 
 class DATA_FIELD:
-    FIELD_TIME = "time_key"
+    FIELD_TIME = "timestamp"
     FIELD_OPEN = "open"
     FIELD_HIGH = "high"
     FIELD_LOW = "low"
