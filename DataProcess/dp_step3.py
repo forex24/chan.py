@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 from typing import List, Dict, Tuple
 import glob
+import re
 
 # 定义每种文件类型需要比较的字段
 FILE_TYPE_FIELDS = {
@@ -23,7 +24,7 @@ def get_symbols(directory: str) -> List[str]:
     return [d for d in os.listdir(directory) if os.path.isdir(os.path.join(directory, d))]
 
 def load_csv(file_path: str) -> pd.DataFrame:
-    """加载CSV文件��返回DataFrame"""
+    """加载CSV文件返回DataFrame"""
     df = pd.read_csv(file_path)
     time_column = 'begin_time' if 'begin_time' in df.columns else 'time'
     df[time_column] = pd.to_datetime(df[time_column])
@@ -31,30 +32,60 @@ def load_csv(file_path: str) -> pd.DataFrame:
 
 def compare_dataframes(df1: pd.DataFrame, df2: pd.DataFrame, fields: List[str]) -> Tuple[bool, str]:
     """比较两个DataFrame的指定字段"""
-    if df1.empty and df2.empty:
-        return True, "Both dataframes are empty"
+    # 检查并报告缺失的列
+    missing_columns_df1 = set(fields) - set(df1.columns)
+    missing_columns_df2 = set(fields) - set(df2.columns)
     
-    if df1.empty or df2.empty:
-        return False, "One dataframe is empty while the other is not"
+    if missing_columns_df1 or missing_columns_df2:
+        message = "Columns mismatch. "
+        if missing_columns_df1:
+            message += f"Missing in first file: {missing_columns_df1}. "
+        if missing_columns_df2:
+            message += f"Missing in second file: {missing_columns_df2}. "
+        return False, message
+
+    # 只使用两个数据框中都存在的列
+    common_fields = list(set(fields) & set(df1.columns) & set(df2.columns))
     
-    time_column = 'begin_time' if 'begin_time' in df1.columns else 'time'
-    
-    df1_sorted = df1.sort_values(time_column).set_index(time_column)
-    df2_sorted = df2.sort_values(time_column).set_index(time_column)
-    
+    if not common_fields:
+        return False, "No common fields to compare"
+
+    df1_sorted = df1.sort_index()
+    df2_sorted = df2.sort_index()
+
     common_index = df1_sorted.index.intersection(df2_sorted.index)
     
     if common_index.empty:
-        return False, "No common timestamps found"
-    
-    df1_common = df1_sorted.loc[common_index, fields]
-    df2_common = df2_sorted.loc[common_index, fields]
-    
-    if df1_common.equals(df2_common):
-        return True, "Data is identical for common timestamps"
+        return False, "No common indices to compare"
+
+    df1_common = df1_sorted.loc[common_index, common_fields]
+    df2_common = df2_sorted.loc[common_index, common_fields]
+
+    is_equal = df1_common.equals(df2_common)
+
+    if is_equal:
+        return True, "Files are identical"
     else:
-        diff_count = (df1_common != df2_common).sum().sum()
-        return False, f"Found {diff_count} differences in the specified fields"
+        # 找出不同的行
+        diff_mask = (df1_common != df2_common).any(axis=1)
+        diff_indices = diff_mask[diff_mask].index
+        
+        # 获取第一个不同的行的索引
+        first_diff_index = diff_indices[0] if len(diff_indices) > 0 else None
+        
+        if first_diff_index is not None:
+            diff_row1 = df1_common.loc[first_diff_index]
+            diff_row2 = df2_common.loc[first_diff_index]
+            diff_fields = [field for field in common_fields if diff_row1[field] != diff_row2[field]]
+            
+            message = f"Files differ. First difference at index {first_diff_index}. "
+            message += f"Different fields: {diff_fields}. "
+            message += f"Values in file1: {diff_row1[diff_fields].to_dict()}. "
+            message += f"Values in file2: {diff_row2[diff_fields].to_dict()}."
+        else:
+            message = "Files differ, but no specific differences found. This might be due to NaN values or floating-point precision issues."
+        
+        return False, message
 
 def compare_symbol_files(dir1: str, dir2: str, symbol: str):
     """比较单个symbol的所有文件"""
@@ -71,18 +102,35 @@ def compare_symbol_files(dir1: str, dir2: str, symbol: str):
             print(f"File {file_name} does not exist in the second directory")
             continue
         
-        file_type = file_name.split('_')[-1]
+        # 使用更新的正则表达式提取 file_type
+        match = re.search(r'_merged_(?:\d+[dhm]|[1-9]\d*min)_(.+\.csv)$', file_name)
+        if match:
+            file_type = match.group(1)
+        else:
+            print(f"Unable to extract file type from {file_name}")
+            continue
+        
         if file_type not in FILE_TYPE_FIELDS:
             print(f"Unknown file type: {file_type}")
             continue
         
         fields = FILE_TYPE_FIELDS[file_type]
         
-        df1 = load_csv(file1)
-        df2 = load_csv(file2)
-        
-        is_same, message = compare_dataframes(df1, df2, fields)
-        print(f"Comparing {file_name}: {message}")
+        try:
+            df1 = load_csv(file1)
+            df2 = load_csv(file2)
+        except Exception as e:
+            print(f"Error loading files for {file_name}: {str(e)}")
+            continue
+
+        try:
+            is_same, message = compare_dataframes(df1, df2, fields)
+            print(f"Comparing {file_name}: {message}")
+        except Exception as e:
+            print(f"Error comparing {file_name}: {str(e)}")
+            print(f"Fields for this file type: {fields}")
+            print(f"Columns in file1: {df1.columns.tolist()}")
+            print(f"Columns in file2: {df2.columns.tolist()}")
 
 def main(dir1: str, dir2: str):
     symbols1 = set(get_symbols(dir1))
