@@ -1,4 +1,4 @@
-import os
+import pandas as pd
 
 from Common.CEnum import DATA_FIELD, KL_TYPE
 from Common.ChanException import CChanException, ErrCode
@@ -11,11 +11,23 @@ from .CommonStockAPI import CCommonStockApi
 
 def create_item_dict(data, column_name):
     for i in range(len(data)):
-        data[i] = parse_time_column(data[i]) if column_name[i] == DATA_FIELD.FIELD_TIME else str2float(data[i])
+        data[i] = parse_time_column(data[i]) if column_name[i] == DATA_FIELD.FIELD_TIME else float(data[i])
+
     return dict(zip(column_name, data))
 
-
 def parse_time_column(inp):
+    # 如果inp是Timestamp类型调用parse_time_column_by_datetime
+    if isinstance(inp, pd.Timestamp):
+        return parse_time_column_by_datetime(inp)
+    else:
+        return parse_time_column_by_str(inp)
+        
+def parse_time_column_by_datetime(inp):
+    #print("time:",inp)
+    return CTime(inp.year, inp.month, inp.day, inp.hour, inp.minute)
+
+
+def parse_time_column_by_str(inp):
     # 20210902113000000
     # 2021-09-13
     if len(inp) == 10:
@@ -40,11 +52,10 @@ def parse_time_column(inp):
     return CTime(year, month, day, hour, minute)
 
 
-class CSV_API(CCommonStockApi):
+class DATAFRAME_API(CCommonStockApi):
     def __init__(self, code, k_type=KL_TYPE.K_DAY, begin_date=None, end_date=None, autype=None):
-        self.headers_exist = True  # 第一行是否是标题，如果是数据，设置为False
         self.columns = [
-	    DATA_FIELD.FIELD_TIME,
+            DATA_FIELD.FIELD_TIME,
             DATA_FIELD.FIELD_OPEN,
             DATA_FIELD.FIELD_HIGH,
             DATA_FIELD.FIELD_LOW,
@@ -53,25 +64,26 @@ class CSV_API(CCommonStockApi):
             # DATA_FIELD.FIELD_TURNOVER,
             # DATA_FIELD.FIELD_TURNRATE,
         ]  # 每一列字段
-        self.time_column_idx = self.columns.index(DATA_FIELD.FIELD_TIME)
-        super(CSV_API, self).__init__(code, k_type, begin_date, end_date, autype)
-
+        self.df = code  # 传入的DataFrame
+        super(DATAFRAME_API, self).__init__(code, k_type, begin_date, end_date, autype)
+        self.begin_date = begin_date #pd.to_datetime(begin_date) if begin_date else None
+        self.end_date = end_date #pd.to_datetime(end_date) if end_date else None
+        
     def get_kl_data(self):
-        cur_path = os.path.dirname(os.path.realpath(__file__))
-        file_path = f"/opt/data/raw_data/{self.code}.csv"
-        if not os.path.exists(file_path):
-            raise CChanException(f"file not exist: {file_path}", ErrCode.SRC_DATA_NOT_FOUND)
+        if self.df is None:
+            raise CChanException("DataFrame is not provided", ErrCode.SRC_DATA_NOT_FOUND)
 
-        for line_number, line in enumerate(open(file_path, 'r')):
-            if self.headers_exist and line_number == 0:
-                continue
-            data = line.strip("\n").split(",")
-            if len(data) != len(self.columns):
-                raise CChanException(f"file format error: {file_path}", ErrCode.SRC_DATA_FORMAT_ERROR)
-            if self.begin_date is not None and data[self.time_column_idx] < self.begin_date:
-                continue
-            if self.end_date is not None and data[self.time_column_idx] > self.end_date:
-                continue
+        if self.begin_date is not None and self.end_date is not None:
+            self.df = self.df[(self.df[DATA_FIELD.FIELD_TIME] >= self.begin_date) & (self.df[DATA_FIELD.FIELD_TIME] < self.end_date)]
+        elif self.begin_date is not None:
+            self.df = self.df[self.df[DATA_FIELD.FIELD_TIME] >= self.begin_date]
+        elif self.end_date is not None:
+            self.df = self.df[self.df[DATA_FIELD.FIELD_TIME] < self.end_date]
+        
+        self.df = self.df[self.columns]
+        
+        for _, row in self.df.iterrows():
+            data = row.tolist()
             yield CKLine_Unit(create_item_dict(data, self.columns))
 
     def SetBasciInfo(self):
