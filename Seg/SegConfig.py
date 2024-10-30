@@ -1,5 +1,5 @@
-from Common.CEnum import LEFT_SEG_METHOD
-from Common.ChanException import CChanException, ErrCode
+from ..Common.CEnum import LEFT_SEG_METHOD
+from ..Common.ChanException import CChanException, ErrCode
 
 
 class CSegConfig:

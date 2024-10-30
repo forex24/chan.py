@@ -1,10 +1,10 @@
 from typing import Generic, List, Optional, Self, TypeVar
 
-from Bi.Bi import CBi
-from Common.CEnum import BI_DIR, MACD_ALGO, TREND_LINE_SIDE
-from Common.ChanException import CChanException, ErrCode
-from KLine.KLine_Unit import CKLine_Unit
-from Math.TrendLine import CTrendLine
+from ..Bi.Bi import CBi
+from ..Common.CEnum import BI_DIR, MACD_ALGO, TREND_LINE_SIDE
+from ..Common.ChanException import CChanException, ErrCode
+from ..KLine.KLine_Unit import CKLine_Unit
+from ..Math.TrendLine import CTrendLine
 
 from .EigenFX import CEigenFX
 
@@ -20,7 +20,7 @@ class CSeg(Generic[LINE_TYPE]):
         self.is_sure = is_sure
         self.dir = end_bi.dir if seg_dir is None else seg_dir
 
-        from ZS.ZS import CZS
+        from ..ZS.ZS import CZS
         self.zs_lst: List[CZS[LINE_TYPE]] = []
 
         self.eigen_fx: Optional[CEigenFX] = None
@@ -29,7 +29,7 @@ class CSeg(Generic[LINE_TYPE]):
         self.pre: Optional[Self] = None
         self.next: Optional[Self] = None
 
-        from BuySellPoint.BS_Point import CBS_Point
+        from ..BuySellPoint.BS_Point import CBS_Point
         self.bsp: Optional[CBS_Point] = None  # 尾部是不是买卖点
 
         self.bi_list: List[LINE_TYPE] = []  # 仅通过self.update_bi_list来更新

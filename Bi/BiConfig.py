@@ -1,5 +1,5 @@
-from Common.CEnum import FX_CHECK_METHOD
-from Common.ChanException import CChanException, ErrCode
+from ..Common.CEnum import FX_CHECK_METHOD
+from ..Common.ChanException import CChanException, ErrCode
 
 
 class CBiConfig:

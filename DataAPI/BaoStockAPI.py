@@ -1,9 +1,9 @@
 import baostock as bs
 
-from Common.CEnum import AUTYPE, DATA_FIELD, KL_TYPE
-from Common.CTime import CTime
-from Common.func_util import kltype_lt_day, str2float
-from KLine.KLine_Unit import CKLine_Unit
+from ..Common.CEnum import AUTYPE, DATA_FIELD, KL_TYPE
+from ..Common.CTime import CTime
+from ..Common.func_util import kltype_lt_day, str2float
+from ..KLine.KLine_Unit import CKLine_Unit
 
 from .CommonStockAPI import CCommonStockApi
 

@@ -6,11 +6,11 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 
-from Chan import CChan
-from Common.CEnum import BI_DIR, FX_TYPE, KL_TYPE, KLINE_DIR, TREND_TYPE
-from Common.ChanException import CChanException, ErrCode
-from Common.CTime import CTime
-from Math.Demark import T_DEMARK_INDEX, CDemarkEngine
+from ..Chan import CChan
+from ..Common.CEnum import BI_DIR, FX_TYPE, KL_TYPE, KLINE_DIR, TREND_TYPE
+from ..Common.ChanException import CChanException, ErrCode
+from ..Common.CTime import CTime
+from ..Math.Demark import T_DEMARK_INDEX, CDemarkEngine
 
 from .PlotMeta import CBi_meta, CChanPlotMeta, CZS_meta
 
@@ -780,7 +780,7 @@ class CPlotDriver:
                 else:
                     upper_bias += getTextBox(ax, txt_instance).height
             for demark_idx in klu.demark.get_countdown():
-                box_bias = 0.5*text_height if text_height is not None and demark_idx['idx'] == CDemarkEngine.MAX_COUNTDOWN else 0
+                box_bias = 0 #0.5*text_height if text_height is not None and demark_idx['idx'] == CDemarkEngine.MAX_COUNTDOWN else 0
                 txt_instance = ax.text(
                     klu.idx,
                     klu.low-under_bias-box_bias if demark_idx['dir'] == BI_DIR.DOWN else klu.high+upper_bias+box_bias,

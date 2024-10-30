@@ -1,15 +1,15 @@
 import copy
 from typing import Dict, Optional
 
-from Common.CEnum import DATA_FIELD, TRADE_INFO_LST, TREND_TYPE
-from Common.ChanException import CChanException, ErrCode
-from Common.CTime import CTime
-from Math.BOLL import BOLL_Metric, BollModel
-from Math.Demark import CDemarkEngine, CDemarkIndex
-from Math.KDJ import KDJ
-from Math.MACD import CMACD, CMACD_item
-from Math.RSI import RSI
-from Math.TrendModel import CTrendModel
+from ..Common.CEnum import DATA_FIELD, TRADE_INFO_LST, TREND_TYPE
+from ..Common.ChanException import CChanException, ErrCode
+from ..Common.CTime import CTime
+from ..Math.BOLL import BOLL_Metric, BollModel
+from ..Math.Demark import CDemarkEngine, CDemarkIndex
+from ..Math.KDJ import KDJ
+from ..Math.MACD import CMACD, CMACD_item
+from ..Math.RSI import RSI
+from ..Math.TrendModel import CTrendModel
 
 from .TradeInfo import CTradeInfo
 
@@ -33,7 +33,7 @@ class CKLine_Unit:
         self.sub_kl_list = []  # 次级别KLU列表
         self.sup_kl: Optional[CKLine_Unit] = None  # 指向更高级别KLU
 
-        from KLine.KLine import CKLine
+        from ..KLine.KLine import CKLine
         self.__klc: Optional[CKLine] = None  # 指向KLine
 
         # self.macd: Optional[CMACD_item] = None

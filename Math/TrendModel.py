@@ -1,5 +1,5 @@
-from Common.CEnum import TREND_TYPE
-from Common.ChanException import CChanException, ErrCode
+from ..Common.CEnum import TREND_TYPE
+from ..Common.ChanException import CChanException, ErrCode
 
 
 class CTrendModel:

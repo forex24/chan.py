@@ -1,18 +1,18 @@
 from typing import List
 
-from Bi.BiConfig import CBiConfig
-from BuySellPoint.BSPointConfig import CBSPointConfig
-from Common.CEnum import TREND_TYPE
-from Common.ChanException import CChanException, ErrCode
-from Common.func_util import _parse_inf
-from Math.BOLL import BollModel
-from Math.Demark import CDemarkEngine
-from Math.KDJ import KDJ
-from Math.MACD import CMACD
-from Math.RSI import RSI
-from Math.TrendModel import CTrendModel
-from Seg.SegConfig import CSegConfig
-from ZS.ZSConfig import CZSConfig
+from .Bi.BiConfig import CBiConfig
+from .BuySellPoint.BSPointConfig import CBSPointConfig
+from .Common.CEnum import TREND_TYPE
+from .Common.ChanException import CChanException, ErrCode
+from .Common.func_util import _parse_inf
+from .Math.BOLL import BollModel
+from .Math.Demark import CDemarkEngine
+from .Math.KDJ import KDJ
+from .Math.MACD import CMACD
+from .Math.RSI import RSI
+from .Math.TrendModel import CTrendModel
+from .Seg.SegConfig import CSegConfig
+from .ZS.ZSConfig import CZSConfig
 
 
 class CChanConfig:

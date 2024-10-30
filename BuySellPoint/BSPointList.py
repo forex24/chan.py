@@ -1,12 +1,12 @@
 from typing import Dict, Generic, List, Optional, TypeVar, Union, overload
 
-from Bi.Bi import CBi
-from Bi.BiList import CBiList
-from Common.CEnum import BSP_TYPE
-from Common.func_util import has_overlap
-from Seg.Seg import CSeg
-from Seg.SegListComm import CSegListComm
-from ZS.ZS import CZS
+from ..Bi.Bi import CBi
+from ..Bi.BiList import CBiList
+from ..Common.CEnum import BSP_TYPE
+from ..Common.func_util import has_overlap
+from ..Seg.Seg import CSeg
+from ..Seg.SegListComm import CSegListComm
+from ..ZS.ZS import CZS
 
 from .BS_Point import CBS_Point
 from .BSPointConfig import CBSPointConfig, CPointConfig

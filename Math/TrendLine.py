@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass
 from math import sqrt
 
-from Common.CEnum import BI_DIR, TREND_LINE_SIDE
+from ..Common.CEnum import BI_DIR, TREND_LINE_SIDE
 
 
 @dataclass

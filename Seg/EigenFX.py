@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from Bi.Bi import CBi
-from Bi.BiList import CBiList
-from Common.CEnum import BI_DIR, FX_TYPE, KLINE_DIR, SEG_TYPE
-from Common.ChanException import CChanException, ErrCode
-from Common.func_util import revert_bi_dir
+from ..Bi.Bi import CBi
+from ..Bi.BiList import CBiList
+from ..Common.CEnum import BI_DIR, FX_TYPE, KLINE_DIR, SEG_TYPE
+from ..Common.ChanException import CChanException, ErrCode
+from ..Common.func_util import revert_bi_dir
 
 from .Eigen import CEigen
 

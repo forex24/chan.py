@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from Common.CEnum import TRADE_INFO_LST
+from ..Common.CEnum import TRADE_INFO_LST
 
 
 class CTradeInfo:

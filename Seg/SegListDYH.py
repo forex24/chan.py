@@ -1,5 +1,5 @@
-from Bi.BiList import CBiList
-from Common.CEnum import BI_DIR, SEG_TYPE
+from ..Bi.BiList import CBiList
+from ..Common.CEnum import BI_DIR, SEG_TYPE
 
 from .SegConfig import CSegConfig
 from .SegListComm import CSegListComm

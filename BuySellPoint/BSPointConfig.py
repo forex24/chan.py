@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
-from Common.CEnum import BSP_TYPE, MACD_ALGO
-from Common.func_util import _parse_inf
+from ..Common.CEnum import BSP_TYPE, MACD_ALGO
+from ..Common.func_util import _parse_inf
 
 
 class CBSPointConfig:
@@ -75,4 +75,4 @@ class CPointConfig:
         if k == "macd_algo":
             self.SetMacdAlgo(v)
         else:
-            exec(f"self.{k} = {v}")
+            setattr(self, k, v)

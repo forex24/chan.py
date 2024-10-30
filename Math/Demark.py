@@ -2,7 +2,7 @@ import copy
 from dataclasses import dataclass
 from typing import List, Literal, Optional, TypedDict
 
-from Common.CEnum import BI_DIR
+from ..Common.CEnum import BI_DIR
 
 
 @dataclass

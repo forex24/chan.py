@@ -3,15 +3,15 @@ import datetime
 from collections import defaultdict
 from typing import Dict, Iterable, List, Optional, Union
 
-from BuySellPoint.BS_Point import CBS_Point
-from ChanConfig import CChanConfig
-from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
-from Common.ChanException import CChanException, ErrCode
-from Common.CTime import CTime
-from Common.func_util import check_kltype_order, kltype_lte_day
-from DataAPI.CommonStockAPI import CCommonStockApi
-from KLine.KLine_List import CKLine_List
-from KLine.KLine_Unit import CKLine_Unit
+from .BuySellPoint.BS_Point import CBS_Point
+from .ChanConfig import CChanConfig
+from .Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
+from .Common.ChanException import CChanException, ErrCode
+from .Common.CTime import CTime
+from .Common.func_util import check_kltype_order, kltype_lte_day
+from .DataAPI.CommonStockAPI import CCommonStockApi
+from .KLine.KLine_List import CKLine_List
+from .KLine.KLine_Unit import CKLine_Unit
 
 
 class CChan:
@@ -169,16 +169,16 @@ class CChan:
     def GetStockAPI(self):
         _dict = {}
         if self.data_src == DATA_SRC.BAO_STOCK:
-            from DataAPI.BaoStockAPI import CBaoStock
+            from .DataAPI.BaoStockAPI import CBaoStock
             _dict[DATA_SRC.BAO_STOCK] = CBaoStock
         elif self.data_src == DATA_SRC.CCXT:
-            from DataAPI.ccxt import CCXT
+            from .DataAPI.ccxt import CCXT
             _dict[DATA_SRC.CCXT] = CCXT
         elif self.data_src == DATA_SRC.CSV:
-            from DataAPI.csvAPI import CSV_API
+            from .DataAPI.csvAPI import CSV_API
             _dict[DATA_SRC.CSV] = CSV_API
         elif self.data_src == DATA_SRC.DATAFRAME:
-            from DataAPI.dataframeAPI import DATAFRAME_API
+            from .DataAPI.dataframeAPI import DATAFRAME_API
             _dict[DATA_SRC.DATAFRAME] = DATAFRAME_API
         if self.data_src in _dict:
             return _dict[self.data_src]
