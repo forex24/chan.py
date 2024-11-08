@@ -1,16 +1,9 @@
+import json
 from typing import Dict, List, Optional
 
 from Common.CEnum import BSP_TYPE, MACD_ALGO
 from Common.func_util import _parse_inf
-
-
-class CBSPointConfig:
-    def __init__(self, **args):
-        self.b_conf = CPointConfig(**args)
-        self.s_conf = CPointConfig(**args)
-
-    def GetBSConfig(self, is_buy):
-        return self.b_conf if is_buy else self.s_conf
+from Common.ChanException import CChanException, ErrCode
 
 
 class CPointConfig:
@@ -44,6 +37,7 @@ class CPointConfig:
         self.bsp2s_follow_2 = bsp2s_follow_2
         self.max_bsp2s_lv: Optional[int] = max_bsp2s_lv
         self.strict_bsp3 = strict_bsp3
+        self.parse_target_type()
 
     def parse_target_type(self):
         _d: Dict[str, BSP_TYPE] = {x.value: x for x in BSP_TYPE}
@@ -76,3 +70,72 @@ class CPointConfig:
             self.SetMacdAlgo(v)
         else:
             exec(f"self.{k} = {v}")
+
+    def to_json(self) -> str:
+        """Convert config to JSON string"""
+        return json.dumps({
+            'divergence_rate': self.divergence_rate,
+            'min_zs_cnt': self.min_zs_cnt,
+            'bsp1_only_multibi_zs': self.bsp1_only_multibi_zs,
+            'max_bs2_rate': self.max_bs2_rate,
+            'macd_algo': self.macd_algo.value,  # Convert enum to string
+            'bs1_peak': self.bs1_peak,
+            'bs_type': self.tmp_target_types,
+            'bsp2_follow_1': self.bsp2_follow_1,
+            'bsp3_follow_1': self.bsp3_follow_1,
+            'bsp3_peak': self.bsp3_peak,
+            'bsp2s_follow_2': self.bsp2s_follow_2,
+            'max_bsp2s_lv': self.max_bsp2s_lv,
+            'strict_bsp3': self.strict_bsp3
+        })
+
+    @classmethod
+    def from_json(cls, json_str: str) -> 'CPointConfig':
+        """Create config from JSON string"""
+        try:
+            data = json.loads(json_str)
+            return cls(
+                divergence_rate=data['divergence_rate'],
+                min_zs_cnt=data['min_zs_cnt'],
+                bsp1_only_multibi_zs=data['bsp1_only_multibi_zs'],
+                max_bs2_rate=data['max_bs2_rate'],
+                macd_algo=data['macd_algo'],
+                bs1_peak=data['bs1_peak'],
+                bs_type=data['bs_type'],
+                bsp2_follow_1=data['bsp2_follow_1'],
+                bsp3_follow_1=data['bsp3_follow_1'],
+                bsp3_peak=data['bsp3_peak'],
+                bsp2s_follow_2=data['bsp2s_follow_2'],
+                max_bsp2s_lv=data['max_bsp2s_lv'],
+                strict_bsp3=data['strict_bsp3']
+            )
+        except (json.JSONDecodeError, KeyError) as e:
+            raise CChanException(f"Invalid JSON format or missing required fields: {str(e)}", ErrCode.PARA_ERROR)
+
+
+class CBSPointConfig:
+    def __init__(self, **args):
+        self.b_conf = CPointConfig(**args)
+        self.s_conf = CPointConfig(**args)
+
+    def to_json(self) -> str:
+        """Convert config to JSON string"""
+        return json.dumps({
+            'b_conf': json.loads(self.b_conf.to_json()),
+            's_conf': json.loads(self.s_conf.to_json())
+        })
+
+    @classmethod
+    def from_json(cls, json_str: str) -> 'CBSPointConfig':
+        """Create config from JSON string"""
+        try:
+            data = json.loads(json_str)
+            instance = cls.__new__(cls)  # Create new instance without calling __init__
+            instance.b_conf = CPointConfig.from_json(json.dumps(data['b_conf']))
+            instance.s_conf = CPointConfig.from_json(json.dumps(data['s_conf']))
+            return instance
+        except (json.JSONDecodeError, KeyError) as e:
+            raise CChanException(f"Invalid JSON format or missing required fields: {str(e)}", ErrCode.PARA_ERROR)
+
+    def GetBSConfig(self, is_buy):
+        return self.b_conf if is_buy else self.s_conf

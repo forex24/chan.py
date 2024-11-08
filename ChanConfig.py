@@ -1,4 +1,5 @@
 from typing import List
+import json
 
 from Bi.BiConfig import CBiConfig
 from BuySellPoint.BSPointConfig import CBSPointConfig
@@ -156,6 +157,91 @@ class CChanConfig:
         self.bs_point_conf.s_conf.parse_target_type()
         self.seg_bs_point_conf.b_conf.parse_target_type()
         self.seg_bs_point_conf.s_conf.parse_target_type()
+
+    def to_json(self) -> str:
+        """Convert config to JSON string"""
+        config_dict = {
+            # Sub-configs
+            'bi_conf': json.loads(self.bi_conf.to_json()),
+            'seg_conf': json.loads(self.seg_conf.to_json()),
+            'zs_conf': json.loads(self.zs_conf.to_json()),
+            'bs_point_conf': json.loads(self.bs_point_conf.to_json()),
+            'seg_bs_point_conf': json.loads(self.seg_bs_point_conf.to_json()),
+
+            # Basic settings
+            'trigger_step': self.trigger_step,
+            'skip_step': self.skip_step,
+            'kl_data_check': self.kl_data_check,
+            'max_kl_misalgin_cnt': self.max_kl_misalgin_cnt,
+            'max_kl_inconsistent_cnt': self.max_kl_inconsistent_cnt,
+            'auto_skip_illegal_sub_lv': self.auto_skip_illegal_sub_lv,
+            'print_warning': self.print_warning,
+            'print_err_time': self.print_err_time,
+
+            # Metrics settings
+            'mean_metrics': self.mean_metrics,
+            'trend_metrics': self.trend_metrics,
+            'macd_config': self.macd_config,
+            'cal_demark': self.cal_demark,
+            'cal_rsi': self.cal_rsi,
+            'cal_kdj': self.cal_kdj,
+            'rsi_cycle': self.rsi_cycle,
+            'kdj_cycle': self.kdj_cycle,
+            'demark_config': self.demark_config,
+            'boll_n': self.boll_n,
+        }
+        return json.dumps(config_dict)
+
+    @classmethod
+    def from_json(cls, json_str: str) -> 'CChanConfig':
+        """Create config from JSON string"""
+        try:
+            data = json.loads(json_str)
+            
+            # Create base instance
+            instance = cls.__new__(cls)
+            
+            # Initialize sub-configs
+            instance.bi_conf = CBiConfig.from_json(json.dumps(data['bi_conf']))
+            instance.seg_conf = CSegConfig.from_json(json.dumps(data['seg_conf']))
+            instance.zs_conf = CZSConfig.from_json(json.dumps(data['zs_conf']))
+            instance.bs_point_conf = CBSPointConfig.from_json(json.dumps(data['bs_point_conf']))
+            instance.seg_bs_point_conf = CBSPointConfig.from_json(json.dumps(data['seg_bs_point_conf']))
+
+            # Basic settings
+            instance.trigger_step = data.get('trigger_step', False)
+            instance.skip_step = data.get('skip_step', 0)
+            instance.kl_data_check = data.get('kl_data_check', True)
+            instance.max_kl_misalgin_cnt = data.get('max_kl_misalgin_cnt', 2)
+            instance.max_kl_inconsistent_cnt = data.get('max_kl_inconsistent_cnt', 5)
+            instance.auto_skip_illegal_sub_lv = data.get('auto_skip_illegal_sub_lv', False)
+            instance.print_warning = data.get('print_warning', True)
+            instance.print_err_time = data.get('print_err_time', False)
+
+            # Metrics settings
+            instance.mean_metrics = data.get('mean_metrics', [])
+            instance.trend_metrics = data.get('trend_metrics', [])
+            instance.macd_config = data.get('macd_config', {"fast": 12, "slow": 26, "signal": 9})
+            instance.cal_demark = data.get('cal_demark', False)
+            instance.cal_rsi = data.get('cal_rsi', False)
+            instance.cal_kdj = data.get('cal_kdj', False)
+            instance.rsi_cycle = data.get('rsi_cycle', 14)
+            instance.kdj_cycle = data.get('kdj_cycle', 9)
+            instance.demark_config = data.get('demark_config', {
+                'demark_len': 9,
+                'setup_bias': 4,
+                'countdown_bias': 2,
+                'max_countdown': 13,
+                'tiaokong_st': True,
+                'setup_cmp2close': True,
+                'countdown_cmp2close': True,
+            })
+            instance.boll_n = data.get('boll_n', 20)
+
+            return instance
+
+        except (json.JSONDecodeError, KeyError) as e:
+            raise CChanException(f"Invalid JSON format or missing required fields: {str(e)}", ErrCode.PARA_ERROR)
 
 
 class ConfigWithCheck:
