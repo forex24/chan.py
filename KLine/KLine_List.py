@@ -150,8 +150,8 @@ class CKLine_List:
             # Convert lst to DataFrame
             dataframes['kline_list'] = pd.DataFrame([
                 {
-                    'begin_time': kl.time_begin.strftime('%Y-%m-%d %H:%M:%S'),
-                    'end_time': kl.time_end.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time': kl.time_begin,
+                    'end_time': kl.time_end,
                     'idx': kl.idx,
                     'dir': kl.dir,
                     'high': kl.high,
@@ -163,30 +163,30 @@ class CKLine_List:
             # Convert bi_list to DataFrame
             dataframes['bi_list'] = pd.DataFrame([
                 {
-                    'begin_time': bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'end_time': bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time': bi.get_begin_klu().time,
+                    'end_time': bi.get_end_klu().time,
                     'idx': bi.idx,
                     'dir': bi.dir,
-                    'high': bi._high(),
-                    'low': bi._low(),                    
+                    'high':bi._high(),
+                    'low':bi._low(),                    
                     'type': bi.type,
                     'is_sure': bi.is_sure,
-                    'seg_idx': bi.seg_idx,
-                    'parent_seg': bi.parent_seg.idx if bi.parent_seg else None,
-                    'begin_klc': bi.begin_klc.idx,
-                    'end_klc': bi.end_klc.idx,
-                    'begin_val': bi.get_begin_val(),
-                    'end_val': bi.get_end_val(),
-                    'klu_cnt': bi.get_klu_cnt(),
-                    'klc_cnt': bi.get_klc_cnt(),
+                    'seg_idx':bi.seg_idx,
+                    'parent_seg':bi.parent_seg.idx if bi.parent_seg else None,
+                    'begin_klc':bi.begin_klc.idx,
+                    'end_klc':bi.end_klc.idx,
+                    'begin_val':bi.get_begin_val(),
+                    'end_val':bi.get_end_val(),
+                    'klu_cnt':bi.get_klu_cnt(),
+                    'klc_cnt':bi.get_klc_cnt(),
                 } for bi in self.bi_list
             ])
     
             # Convert seg_list to DataFrame
             dataframes['seg_list'] = pd.DataFrame([
                 {
-                    'begin_time': seg.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'end_time': seg.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time':seg.get_begin_klu().time,
+                    'end_time':seg.get_end_klu().time,
                     'idx': seg.idx,
                     'dir': seg.dir,
                     'high': seg._high(),
@@ -196,15 +196,15 @@ class CKLine_List:
                     'end_bi_idx': seg.end_bi.idx if seg.end_bi else None,
                     'zs_count': len(seg.zs_lst),
                     'bi_count': len(seg.bi_list),
-                    'resone': seg.reason,
+                    'resone':seg.reason,
                 } for seg in self.seg_list
             ])
     
             # Convert segseg_list to DataFrame
             dataframes['segseg_list'] = pd.DataFrame([
                 {
-                    'begin_time': segseg.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'end_time': segseg.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time':segseg.get_begin_klu().time,
+                    'end_time':segseg.get_end_klu().time,                    
                     'idx': segseg.idx,
                     'dir': segseg.dir,
                     'high': segseg._high(),
@@ -214,71 +214,79 @@ class CKLine_List:
                     'end_seg_idx': segseg.end_bi.idx if segseg.end_bi else None,
                     'zs_count': len(segseg.zs_lst),
                     'bi_count': len(segseg.bi_list),
-                    'resone': segseg.reason,
+                    'resone':segseg.reason,
                 } for segseg in self.segseg_list
             ])
     
             # Convert zs_list to DataFrame
             dataframes['zs_list'] = pd.DataFrame([
                 {
-                    'begin_time': zs.begin_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.begin_bi else None,
-                    'end_time': zs.end_bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.end_bi else None,
+                    #'idx': zs.idx,
+                    #'zs_type': zs.zs_type,
+                    'begin_time': zs.begin_bi.get_begin_klu().time,
+                    'end_time': zs.end_bi.get_end_klu().time,
                     'high': zs.high,
                     'low': zs.low,
-                    'peak_high': zs.peak_high,
-                    'peak_low': zs.peak_low,
+                    'peak_high':zs.peak_high,
+                    'peak_low':zs.peak_low,
                     'is_sure': zs.is_sure,
                     'begin_bi_idx': zs.begin_bi.idx if zs.begin_bi else None,
                     'end_bi_idx': zs.end_bi.idx if zs.end_bi else None,
-                    'bi_in': zs.bi_in.idx if zs.bi_in else None,
-                    'bi_out': zs.bi_out.idx if zs.bi_out else None,
-                    'begin_bi_time': zs.begin_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.begin_bi else None,
-                    'end_bi_time': zs.end_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.end_bi else None,
-                    'bi_in_time': zs.bi_in.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.bi_in else None,
-                    'bi_out_time': zs.bi_out.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if zs.bi_out else None,
+                    'bi_in':zs.bi_in.idx if zs.bi_in else None,
+                    'bi_out':zs.bi_out.idx if zs.bi_out else None,
+                    'begin_bi_time': zs.begin_bi.get_begin_klu().time if zs.begin_bi else None,
+                    'end_bi_time': zs.end_bi.get_begin_klu().time if zs.end_bi else None,
+                    'bi_in_time':zs.bi_in.get_begin_klu().time if zs.bi_in else None,
+                    'bi_out_time':zs.bi_out.get_begin_klu().time if zs.bi_out else None,
                 } for zs in self.zs_list
             ])
     
             # Convert segzs_list to DataFrame
             dataframes['segzs_list'] = pd.DataFrame([
                 {
-                    'begin_time': segzs.begin_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.begin_bi else None,
-                    'end_time': segzs.end_bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.end_bi else None,
+                    #'idx': segzs.idx,
+                    #'zs_type': segzs.zs_type,
+                    #'begin_time': segzs.begin_time,
+                    #'end_time': segzs.end_time,
+                    'begin_time': segzs.begin_bi.get_begin_klu().time,
+                    'end_time': segzs.end_bi.get_end_klu().time,                    
                     'high': segzs.high,
                     'low': segzs.low,
-                    'peak_high': segzs.peak_high,
-                    'peak_low': segzs.peak_low,
+                    'peak_high':segzs.peak_high,
+                    'peak_low':segzs.peak_low,
                     'is_sure': segzs.is_sure,                    
                     'begin_seg_idx': segzs.begin_bi.idx if segzs.begin_bi else None,
                     'end_seg_idx': segzs.end_bi.idx if segzs.end_bi else None,
-                    'bi_in': segzs.bi_in.idx if segzs.bi_in else None,
-                    'bi_out': segzs.bi_out.idx if segzs.bi_out else None,
-                    'begin_bi_time': segzs.begin_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.begin_bi else None,
-                    'end_bi_time': segzs.end_bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.end_bi else None,
-                    'bi_in_time': segzs.bi_in.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.bi_in else None,
-                    'bi_out_time': segzs.bi_out.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if segzs.bi_out else None,
+                    'bi_in':segzs.bi_in.idx if segzs.bi_in else None,
+                    'bi_out':segzs.bi_out.idx if segzs.bi_out else None,
+                    'begin_bi_time': segzs.begin_bi.get_begin_klu().time if segzs.begin_bi else None,
+                    'end_bi_time': segzs.end_bi.get_begin_klu().time if segzs.end_bi else None,
+                    'bi_in_time':segzs.bi_in.get_begin_klu().time if segzs.bi_in else None,
+                    'bi_out_time':segzs.bi_out.get_begin_klu().time if segzs.bi_out else None,
                 } for segzs in self.segzs_list
             ])
     
             # Convert bs_point_lst to DataFrame
             dataframes['bs_point_lst'] = pd.DataFrame([
                 {
-                    'begin_time': bsp.klu.time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time': bsp.klu.time,
+                    #'idx': bsp.idx,
                     'bsp_type': bsp.type2str(),
                     'bi_idx': bsp.bi.idx if bsp.bi else None,
-                    'bi_begin_time': bsp.bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if bsp.bi else None,
-                    'bi_end_time': bsp.bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if bsp.bi else None,
+                    'bi_begin_time': bsp.bi.get_begin_klu().time if bsp.bi else None,
+                    'bi_end_time': bsp.bi.get_end_klu().time if bsp.bi else None,
                 } for bsp in self.bs_point_lst
             ])
     
             # Convert seg_bs_point_lst to DataFrame
             dataframes['seg_bs_point_lst'] = pd.DataFrame([
                 {
-                    'begin_time': seg_bsp.klu.time.strftime('%Y-%m-%d %H:%M:%S'),
+                    'begin_time': seg_bsp.klu.time,                    
+                    #'idx': seg_bsp.idx,
                     'bsp_type': seg_bsp.type2str(),
                     'seg_idx': seg_bsp.bi.idx if seg_bsp.bi else None,
-                    'bi_begin_time': seg_bsp.bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if seg_bsp.bi else None,
-                    'bi_end_time': seg_bsp.bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if seg_bsp.bi else None,
+                    'bi_begin_time': seg_bsp.bi.get_begin_klu().time if seg_bsp.bi else None,
+                    'bi_end_time': seg_bsp.bi.get_end_klu().time if seg_bsp.bi else None,
                 } for seg_bsp in self.seg_bs_point_lst
             ])
     
@@ -302,8 +310,21 @@ class CKLine_List:
         # 获取所有的 DataFrame
         dataframes = self.to_dataframes()
 
-        # 遍历并保存每个 DataFrame
+        # Format specific datetime fields before saving to CSV
         for name, df in dataframes.items():
+            # List of specific time fields to format
+            time_fields = [
+                'begin_time', 'end_time', 
+                'bi_begin_time', 'bi_end_time', 
+                'begin_bi_time', 'end_bi_time', 
+                'bi_in_time', 'bi_out_time'
+            ]
+            
+            # Format specified datetime columns
+            for col in time_fields:
+                if col in df.columns:
+                    df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
+
             file_path = os.path.join(directory, f"{name}.csv")
             df.to_csv(file_path, index=False)
             print(f"Saved {name} to {file_path}")
@@ -313,26 +334,26 @@ class CKLine_List:
         if self.bs_point_lst:
             latest_bsp = self.bs_point_lst[-1]
             self.bs_point_history.append({
-                'begin_time': latest_bsp.klu.time.strftime('%Y-%m-%d %H:%M:%S'),
+                'begin_time': latest_bsp.klu.time,
                 'bsp_type': latest_bsp.type2str(),
                 'is_buy': latest_bsp.is_buy,
-                'relate_bsp1': latest_bsp.relate_bsp1.klu.time.strftime('%Y-%m-%d %H:%M:%S') if latest_bsp.relate_bsp1 else None,
+                'relate_bsp1': latest_bsp.relate_bsp1.klu.time if latest_bsp.relate_bsp1 else None,
                 'bi_idx': latest_bsp.bi.idx if latest_bsp.bi else None,
-                'bi_begin_time': latest_bsp.bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if latest_bsp.bi else None,
-                'bi_end_time': latest_bsp.bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if latest_bsp.bi else None,
+                'bi_begin_time': latest_bsp.bi.get_begin_klu().time if latest_bsp.bi else None,
+                'bi_end_time': latest_bsp.bi.get_end_klu().time if latest_bsp.bi else None,
             })
 
         # Record only the latest seg_bs_points
         if self.seg_bs_point_lst:
             latest_seg_bsp = self.seg_bs_point_lst[-1]
             self.seg_bs_point_history.append({
-                'begin_time': latest_seg_bsp.klu.time.strftime('%Y-%m-%d %H:%M:%S'),
+                'begin_time': latest_seg_bsp.klu.time,
                 'bsp_type': latest_seg_bsp.type2str(),
                 'is_buy': latest_seg_bsp.is_buy,
-                'relate_bsp1': latest_seg_bsp.relate_bsp1.klu.time.strftime('%Y-%m-%d %H:%M:%S') if latest_seg_bsp.relate_bsp1 else None,
+                'relate_bsp1': latest_seg_bsp.relate_bsp1.klu.time if latest_seg_bsp.relate_bsp1 else None,
                 'seg_idx': latest_seg_bsp.bi.idx if latest_seg_bsp.bi else None,
-                'bi_begin_time': latest_seg_bsp.bi.get_begin_klu().time.strftime('%Y-%m-%d %H:%M:%S') if latest_seg_bsp.bi else None,
-                'bi_end_time': latest_seg_bsp.bi.get_end_klu().time.strftime('%Y-%m-%d %H:%M:%S') if latest_seg_bsp.bi else None,
+                'bi_begin_time': latest_seg_bsp.bi.get_begin_klu().time if latest_seg_bsp.bi else None,
+                'bi_end_time': latest_seg_bsp.bi.get_end_klu().time if latest_seg_bsp.bi else None,
             })
 
 
