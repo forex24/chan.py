@@ -196,12 +196,12 @@ class CKLine_List:
                     'end_bi_idx': seg.end_bi.idx if seg.end_bi else None,
                     'zs_count': len(seg.zs_lst),
                     'bi_count': len(seg.bi_list),
-                    'resone':seg.reason,
+                    'reason':seg.reason,
                 } for seg in self.seg_list
             ])
     
             # Convert segseg_list to DataFrame
-            dataframes['segseg_list'] = pd.DataFrame([
+            dataframes['seg_seg_list'] = pd.DataFrame([
                 {
                     'begin_time':segseg.get_begin_klu().time,
                     'end_time':segseg.get_end_klu().time,                    
@@ -214,7 +214,7 @@ class CKLine_List:
                     'end_seg_idx': segseg.end_bi.idx if segseg.end_bi else None,
                     'zs_count': len(segseg.zs_lst),
                     'bi_count': len(segseg.bi_list),
-                    'resone':segseg.reason,
+                    'reason':segseg.reason,
                 } for segseg in self.segseg_list
             ])
     
@@ -242,7 +242,7 @@ class CKLine_List:
             ])
     
             # Convert segzs_list to DataFrame
-            dataframes['segzs_list'] = pd.DataFrame([
+            dataframes['seg_zs_list'] = pd.DataFrame([
                 {
                     #'idx': segzs.idx,
                     #'zs_type': segzs.zs_type,
