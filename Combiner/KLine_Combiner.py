@@ -91,6 +91,7 @@ class CKLine_Combiner(Generic[T]):
         # allow_top_equal = -1 被包含，底部相等不合并
         combine_item = CCombine_Item(unit_kl)
         _dir = self.test_combine(combine_item, exclude_included, allow_top_equal)
+        #print(f'klu:{unit_kl.time} _dir:{_dir}')
         if _dir == KLINE_DIR.COMBINE:
             self.__lst.append(unit_kl)
             if isinstance(unit_kl, CKLine_Unit):
@@ -105,7 +106,7 @@ class CKLine_Combiner(Generic[T]):
                     self.__low = min([self.low, combine_item.low])
             else:
                 raise CChanException(f"KLINE_DIR = {self.dir} err!!! must be {KLINE_DIR.UP}/{KLINE_DIR.DOWN}", ErrCode.COMBINER_ERR)
-            self._time_end = combine_item.time_end
+            self.__time_end = combine_item.time_end
             self.clean_cache()
         # 返回UP/DOWN/COMBINE给KL_LIST，设置下一个的方向
         return _dir

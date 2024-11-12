@@ -25,6 +25,7 @@ import pandas as pd
 from glob import glob
 import re
 import shutil
+import json
 
 DEFAULT_MAX_COUNT = 200000  # 设置最大分割大小
 DEFAULT_MIN_COUNT = 10000  # 设置最小分割大小
@@ -90,70 +91,21 @@ def chan_lab(df, symbol, output_dir):
         continue
     start = pd.to_datetime(df['timestamp'].iloc[0])
     end = pd.to_datetime(df['timestamp'].iloc[-1])
-    directory = f"{symbol}_save_{start.strftime('%Y%m%d%H%M%S')}_{end.strftime('%Y%m%d%H%M%S')}"
+    #directory = f"{symbol}_save_{start.strftime('%Y%m%d%H%M%S')}_{end.strftime('%Y%m%d%H%M%S')}"
+    directory = f"{symbol}"
     directory = os.path.join(output_dir, directory)
     ensure_directory_exists(directory)
     chan[0].to_csv(directory)  # 使用新的输出目录
 
 
-def resample_timeframe(df, timeframe):
-    df = df.set_index('timestamp')
-    df_resampled = df.resample(timeframe).agg({
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volume': 'sum'
-    })
-    df_resampled.dropna(inplace=True)
-    
-    df_resampled.drop_duplicates(inplace=True)
-    df_resampled.reset_index(inplace=True)
-    df_resampled.sort_values(by='timestamp',inplace=True)
-    return df_resampled
-
 def load_csv(filename):
     df = pd.read_csv(filename)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
-    #df.set_index('timestamp', inplace=True)
-    #df.drop_duplicates(inplace=True)
-    #df.reset_index(inplace=True)
-    #df.sort_values(by='timestamp',inplace=True)
     return df
 
 def split_dataframe(df, freq):
-    #length = len(df)
-    #overlap_size = int(DEFAULT_MAX_COUNT * OVERLAP_RATIO)
-    #step_size = DEFAULT_MAX_COUNT - overlap_size
-
-    #print(f'freq: {freq}, length: {length}, splits: {(length - overlap_size) // step_size + 1}')
-
-    #start_idx = 0
-    #split_num = 0
     split_dfs = []
-
-    #while start_idx < length:
-    #    end_idx = min(start_idx + DEFAULT_MAX_COUNT, length)
-    #    split_df = df.iloc[start_idx:end_idx].copy()
-    #    split_dfs.append(split_df)
-
-    #    start_idx += step_size
-    #    split_num += 1
-
-    # 检查最后一个分割是否小于最小大小
-    #if len(split_dfs[-1]) < DEFAULT_MIN_COUNT and len(split_dfs) > 1:
-    #    # 将最后一个分割合并到前一个
-    #    split_dfs[-2] = pd.concat([split_dfs[-2], split_dfs[-1]])
-    #    split_dfs.pop()
-    #    split_num -= 1
-
-    # 打印每个分割的信息
-    #for i, split_df in enumerate(split_dfs):
-    #    print(f"Split {i} for {freq}, rows: {len(split_df)}")
-    
-    #logging.info(f"Total splits for {freq}: {split_num}")
     split_dfs.append(df)
-
     return split_dfs
 
 def label(df, symbol, start, end, output_dir):
@@ -172,14 +124,11 @@ def parse_symbol(symbol, input_directory, output_directory):
     try:
         df = load_csv(file_path)
         
-        timeframe=['1min']
+        timeframe=['1m']
         all_splits = {}
         for freq in timeframe:
-            #freq_df = resample_timeframe(df, freq)
-            #freq_df.to_csv(os.path.join(output_directory, f'{symbol}_{freq}.csv'))
             all_splits[freq] = split_dataframe(df, freq)
-            #for index, check_df in enumerate(all_splits[freq]):
-            #    check_df.to_csv(os.path.join(output_directory, f'{symbol}_{freq}_{index}.csv'))
+
 
         n_cores = cpu_count()
         logging.info(f'系统的核心数是：{n_cores}')
@@ -197,16 +146,84 @@ def parse_symbol(symbol, input_directory, output_directory):
                 
                 symbol_freq_dir = os.path.join(output_directory, symbol)
                 ensure_directory_exists(symbol_freq_dir)
-
-                #print(split_df.head(40))
                 
-                tasks.append(delayed(label)(split_df, f"{symbol}_{freq}_{i}", start, end, symbol_freq_dir))
-                #label(split_df, f"{symbol}_{freq}_{i}", start, end, symbol_freq_dir)
+                tasks.append(delayed(label)(split_df, f"{symbol}_{freq}", start, end, symbol_freq_dir))
 
         multi_work(tasks)
 
     except Exception as e:
         logging.error(f"Error processing symbol {symbol}: {str(e)}")
+
+def dump_config(config: CChanConfig) -> str:
+    """
+    Dumps the config content as JSON
+    
+    Args:
+        config: CChanConfig instance
+    
+    Returns:
+        str: JSON formatted string of the config
+    """
+    def convert_value(v):
+        """Helper function to convert values to JSON serializable format"""
+        if hasattr(v, 'name'):  # Handle enum types
+            return v.name
+        elif isinstance(v, (str, int, float, bool, type(None))):
+            return v
+        elif isinstance(v, dict):
+            return {k: convert_value(val) for k, val in v.items()}
+        elif isinstance(v, (list, tuple)):
+            return [convert_value(item) for item in v]
+        return str(v)  # Convert any other types to string
+
+    config_dict = {
+        "bi_conf": {
+            "bi_algo": config.bi_conf.bi_algo,
+            "is_strict": config.bi_conf.is_strict,
+            "gap_as_kl": config.bi_conf.gap_as_kl,
+            "bi_end_is_peak": config.bi_conf.bi_end_is_peak,
+            "bi_allow_sub_peak": config.bi_conf.bi_allow_sub_peak,
+            "bi_fx_check": convert_value(config.bi_conf.bi_fx_check)
+        },
+        "seg_conf": {
+            "seg_algo": config.seg_conf.seg_algo,
+            "left_method": convert_value(config.seg_conf.left_method)
+        },
+        "zs_conf": {k: convert_value(v) for k, v in vars(config.zs_conf).items()},
+        "bs_point_conf": {
+            "b_conf": {k: convert_value(v) for k, v in vars(config.bs_point_conf.b_conf).items()} if hasattr(config.bs_point_conf, 'b_conf') else {},
+            "s_conf": {k: convert_value(v) for k, v in vars(config.bs_point_conf.s_conf).items()} if hasattr(config.bs_point_conf, 's_conf') else {}
+        },
+        "seg_bs_point_conf": {
+            "b_conf": {k: convert_value(v) for k, v in vars(config.seg_bs_point_conf.b_conf).items()} if hasattr(config.seg_bs_point_conf, 'b_conf') else {},
+            "s_conf": {k: convert_value(v) for k, v in vars(config.seg_bs_point_conf.s_conf).items()} if hasattr(config.seg_bs_point_conf, 's_conf') else {}
+        },
+    }
+    
+    # Remove any non-serializable objects
+    for section_name, section in config_dict.items():
+        if isinstance(section, dict):
+            for key in list(section.keys()):
+                if not isinstance(section[key], (str, int, float, bool, list, dict, type(None))):
+                    del section[key]
+    
+    return json.dumps(config_dict, indent=2, ensure_ascii=False)
+
+def export_config_to_json2(config: CChanConfig, output_path: str):
+    """
+    将配置导出为JSON文件
+    Args:
+        config: CChanConfig对象
+        output_path: JSON文件保存路径
+    """
+    import json
+    try:
+        json_str = dump_config(config)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(json.loads(json_str), f, indent=4, ensure_ascii=False)
+        logging.info(f"配置已成功导出到: {output_path}")
+    except Exception as e:
+        logging.error(f"导出配置失败: {str(e)}")
 
 def export_config_to_json(config: CChanConfig, output_path: str):
     """
@@ -260,6 +277,7 @@ if __name__ == "__main__":
     # 导出配置到JSON文件
     config_path = os.path.join(os.path.dirname(__file__), 'chan_config.json')
     export_config_to_json(config, config_path)
+    dump_config(config)
 
 
     parser = argparse.ArgumentParser(description='Merge CSV files for symbol analysis.')
@@ -269,10 +287,6 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    # 如果提供了配置文件，则使用提供的配置
-    if args.config and args.config != config_path:
-        config = load_config_from_json(args.config)
-
     root_directory = args.root
     input_directory = os.path.join(root_directory, 'raw_data')
     output_directory = os.path.join(root_directory, 'split_data')
@@ -280,6 +294,10 @@ if __name__ == "__main__":
 
     if args.symbol:
         parse_symbol(args.symbol, input_directory, output_directory)
+        config_path = os.path.join(output_directory, 'chan_config.json')
+        export_config_to_json(config, config_path)
+        config_path = os.path.join(output_directory, 'chan_config2.json')
+        export_config_to_json(config, config_path)
     else:
         symbols = get_all_symbols(input_directory)
         print(symbols)

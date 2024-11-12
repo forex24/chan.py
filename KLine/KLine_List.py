@@ -275,6 +275,7 @@ class CKLine_List:
                     'bi_idx': bsp.bi.idx if bsp.bi else None,
                     'bi_begin_time': bsp.bi.get_begin_klu().time if bsp.bi else None,
                     'bi_end_time': bsp.bi.get_end_klu().time if bsp.bi else None,
+                    'relate_bsp1_time': bsp.relate_bsp1.klu.time if bsp.relate_bsp1 else None,
                 } for bsp in self.bs_point_lst
             ])
     
@@ -287,6 +288,7 @@ class CKLine_List:
                     'seg_idx': seg_bsp.bi.idx if seg_bsp.bi else None,
                     'bi_begin_time': seg_bsp.bi.get_begin_klu().time if seg_bsp.bi else None,
                     'bi_end_time': seg_bsp.bi.get_end_klu().time if seg_bsp.bi else None,
+                    'relate_bsp1_time': seg_bsp.relate_bsp1.klu.time if seg_bsp.relate_bsp1 else None,
                 } for seg_bsp in self.seg_bs_point_lst
             ])
     
