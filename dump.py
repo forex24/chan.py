@@ -11,6 +11,8 @@ from joblib import Parallel, delayed, cpu_count
 import pandas as pd
 import logging
 import os
+import time
+from tqdm import tqdm
 
 from Chan import CChan
 from ChanConfig import CChanConfig
@@ -47,14 +49,12 @@ def get_all_symbols(directory):
     return symbols
 
 
-def chan_lab(df, symbol, output_dir):
+def chan_lab(df, symbol, output_dir, df_len):
     """
     对输入数据打标策略产出的买卖点的特征
     start向前减一个月,end向后加一个月
     用于数据warmup
     """
-    #print(df.head(40))
-    #print('symbol:', symbol)
     code = df
     begin_time = None
     end_time = None
@@ -86,9 +86,12 @@ def chan_lab(df, symbol, output_dir):
         autype=AUTYPE.QFQ,
     )
 
-    # 跑策略，保存买卖点的特征
-    for _ in chan.step_load():
-        continue
+    # 跑策略，保存买卖点的特征，添加进度条
+    with tqdm(total=df_len, desc=f"Processing {symbol}", leave=False) as pbar:
+        for _ in chan.step_load():
+            pbar.update(1)
+            continue
+
     start = pd.to_datetime(df['timestamp'].iloc[0])
     end = pd.to_datetime(df['timestamp'].iloc[-1])
     #directory = f"{symbol}_save_{start.strftime('%Y%m%d%H%M%S')}_{end.strftime('%Y%m%d%H%M%S')}"
@@ -108,27 +111,33 @@ def split_dataframe(df, freq):
     split_dfs.append(df)
     return split_dfs
 
-def label(df, symbol, start, end, output_dir):
+def label(df, symbol, start, end, output_dir, df_len):
     try:
-        chan_lab(df, symbol, output_dir)
+        chan_lab(df, symbol, output_dir, df_len)
     except Exception as e:
         logging.error(f"Error processing {symbol} from {start} to {end}: {e}")
+
+def format_time(seconds):
+    """Format seconds into hours, minutes, and seconds"""
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
 def parse_symbol(symbol, input_directory, output_directory):
     csv_file = f"{symbol}.csv"
     file_path = os.path.join(input_directory, csv_file)
     if not os.path.exists(file_path):
         logging.warning(f"No CSV file found for symbol {symbol}")
-        return
+        return False
     
     try:
         df = load_csv(file_path)
-        
+        df_len = len(df)
         timeframe=['1m']
         all_splits = {}
         for freq in timeframe:
             all_splits[freq] = split_dataframe(df, freq)
-
 
         n_cores = cpu_count()
         logging.info(f'系统的核心数是：{n_cores}')
@@ -147,12 +156,14 @@ def parse_symbol(symbol, input_directory, output_directory):
                 symbol_freq_dir = os.path.join(output_directory, symbol)
                 ensure_directory_exists(symbol_freq_dir)
                 
-                tasks.append(delayed(label)(split_df, symbol, start, end, symbol_freq_dir))
+                tasks.append(delayed(label)(split_df, symbol, start, end, symbol_freq_dir, df_len))
 
         multi_work(tasks)
+        return True
 
     except Exception as e:
         logging.error(f"Error processing symbol {symbol}: {str(e)}")
+        return False
 
 def dump_config(config: CChanConfig) -> str:
     """
@@ -258,6 +269,9 @@ def load_config_from_json(json_path: str) -> CChanConfig:
         raise
 
 if __name__ == "__main__":
+    start_time = time.time()
+    logging.info("Starting data processing...")
+
     # 创建默认配置
     config = CChanConfig({
         "trigger_step": True,  # 打开开关！
@@ -292,19 +306,41 @@ if __name__ == "__main__":
     output_directory = os.path.join(root_directory, 'dump_data')
     ensure_directory_exists(output_directory)
 
+    success_count = 0
+    fail_count = 0
+
     if args.symbol:
+        logging.info(f"Processing single symbol: {args.symbol}")
         dir = os.path.join(output_directory, args.symbol)
         ensure_directory_exists(dir)
-        parse_symbol(args.symbol, input_directory, output_directory)
+        if parse_symbol(args.symbol, input_directory, output_directory):
+            success_count += 1
+        else:
+            fail_count += 1
         config_path = os.path.join(output_directory, args.symbol,'chan_config.json')
         export_config_to_json(config, config_path)
         config_path = os.path.join(output_directory, args.symbol,'chan_config2.json')
         export_config_to_json(config, config_path)
     else:
         symbols = get_all_symbols(input_directory)
-        print(symbols)
-        for symbol in symbols:
-            parse_symbol(symbol, input_directory, output_directory)
+        total_symbols = len(symbols)
+        logging.info(f"Found {total_symbols} symbols to process")
+        
+        with tqdm(total=total_symbols, desc="Processing symbols") as pbar:
+            for symbol in symbols:
+                if parse_symbol(symbol, input_directory, output_directory):
+                    success_count += 1
+                else:
+                    fail_count += 1
+                pbar.update(1)
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+
+    logging.info(f"Processing complete:")
+    logging.info(f"- Successful: {success_count}")
+    logging.info(f"- Failed: {fail_count}")
+    logging.info(f"Total execution time: {format_time(execution_time)}")
 
 
 
