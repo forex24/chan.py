@@ -92,8 +92,8 @@ def chan_lab(df, symbol, output_dir):
     start = pd.to_datetime(df['timestamp'].iloc[0])
     end = pd.to_datetime(df['timestamp'].iloc[-1])
     #directory = f"{symbol}_save_{start.strftime('%Y%m%d%H%M%S')}_{end.strftime('%Y%m%d%H%M%S')}"
-    directory = f"{symbol}"
-    directory = os.path.join(output_dir, directory)
+    #directory = f"{symbol}"
+    directory = os.path.join(output_dir, symbol)
     ensure_directory_exists(directory)
     chan[0].to_csv(directory)  # 使用新的输出目录
 
@@ -147,7 +147,7 @@ def parse_symbol(symbol, input_directory, output_directory):
                 symbol_freq_dir = os.path.join(output_directory, symbol)
                 ensure_directory_exists(symbol_freq_dir)
                 
-                tasks.append(delayed(label)(split_df, f"{symbol}_{freq}", start, end, symbol_freq_dir))
+                tasks.append(delayed(label)(split_df, symbol, start, end, symbol_freq_dir))
 
         multi_work(tasks)
 
@@ -289,14 +289,16 @@ if __name__ == "__main__":
 
     root_directory = args.root
     input_directory = os.path.join(root_directory, 'raw_data')
-    output_directory = os.path.join(root_directory, 'split_data')
+    output_directory = os.path.join(root_directory, 'dump_data')
     ensure_directory_exists(output_directory)
 
     if args.symbol:
+        dir = os.path.join(output_directory, args.symbol)
+        ensure_directory_exists(dir)
         parse_symbol(args.symbol, input_directory, output_directory)
-        config_path = os.path.join(output_directory, 'chan_config.json')
+        config_path = os.path.join(output_directory, args.symbol,'chan_config.json')
         export_config_to_json(config, config_path)
-        config_path = os.path.join(output_directory, 'chan_config2.json')
+        config_path = os.path.join(output_directory, args.symbol,'chan_config2.json')
         export_config_to_json(config, config_path)
     else:
         symbols = get_all_symbols(input_directory)
