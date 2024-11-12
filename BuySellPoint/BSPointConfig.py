@@ -73,12 +73,14 @@ class CPointConfig:
 
     def to_json(self) -> str:
         """Convert config to JSON string"""
+        divergence_rate_str = "inf" if self.divergence_rate == float('inf') else str(self.divergence_rate)
+        
         return json.dumps({
-            'divergence_rate': self.divergence_rate,
+            'divergence_rate': divergence_rate_str,
             'min_zs_cnt': self.min_zs_cnt,
             'bsp1_only_multibi_zs': self.bsp1_only_multibi_zs,
             'max_bs2_rate': self.max_bs2_rate,
-            'macd_algo': self.macd_algo.value,  # Convert enum to string
+            'macd_algo': self.macd_algo.value,
             'bs1_peak': self.bs1_peak,
             'bs_type': self.tmp_target_types,
             'bsp2_follow_1': self.bsp2_follow_1,
@@ -94,8 +96,11 @@ class CPointConfig:
         """Create config from JSON string"""
         try:
             data = json.loads(json_str)
+            divergence_rate = float('inf') if data['divergence_rate'].lower() == 'inf' \
+                else float(data['divergence_rate'])
+            
             return cls(
-                divergence_rate=data['divergence_rate'],
+                divergence_rate=divergence_rate,
                 min_zs_cnt=data['min_zs_cnt'],
                 bsp1_only_multibi_zs=data['bsp1_only_multibi_zs'],
                 max_bs2_rate=data['max_bs2_rate'],

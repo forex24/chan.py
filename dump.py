@@ -96,9 +96,9 @@ def chan_lab(df, symbol, output_dir, df_len):
     end = pd.to_datetime(df['timestamp'].iloc[-1])
     #directory = f"{symbol}_save_{start.strftime('%Y%m%d%H%M%S')}_{end.strftime('%Y%m%d%H%M%S')}"
     #directory = f"{symbol}"
-    directory = os.path.join(output_dir, symbol)
-    ensure_directory_exists(directory)
-    chan[0].to_csv(directory)  # 使用新的输出目录
+    #directory = os.path.join(output_dir, symbol)
+    #ensure_directory_exists(directory)
+    chan[0].to_csv(output_dir)  # 使用新的输出目录
 
 
 def load_csv(filename):

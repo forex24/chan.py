@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Union, overload
 
 import pandas as pd
+import csv
 
 from Bi.Bi import CBi
 from Bi.BiList import CBiList
@@ -144,179 +145,194 @@ class CKLine_List:
         for klc in self.lst[klc_begin_idx:]:
             yield from klc.lst
 
-    def to_dataframes(self) -> Dict[str, pd.DataFrame]:
-            dataframes = {}
-    
-            # Convert lst to DataFrame
-            dataframes['kline_list'] = pd.DataFrame([
-                {
-                    'begin_time': kl.time_begin,
-                    'end_time': kl.time_end,
-                    'idx': kl.idx,
-                    'dir': kl.dir,
-                    'high': kl.high,
-                    'low': kl.low,
-                    'fx': kl.fx
-                } for kl in self.lst
-            ])
-    
-            # Convert bi_list to DataFrame
-            dataframes['bi_list'] = pd.DataFrame([
-                {
-                    'begin_time': bi.get_begin_klu().time,
-                    'end_time': bi.get_end_klu().time,
-                    'idx': bi.idx,
-                    'dir': bi.dir,
-                    'high':bi._high(),
-                    'low':bi._low(),                    
-                    'type': bi.type,
-                    'is_sure': bi.is_sure,
-                    'seg_idx':bi.seg_idx,
-                    'parent_seg':bi.parent_seg.idx if bi.parent_seg else None,
-                    'begin_klc':bi.begin_klc.idx,
-                    'end_klc':bi.end_klc.idx,
-                    'begin_val':bi.get_begin_val(),
-                    'end_val':bi.get_end_val(),
-                    'klu_cnt':bi.get_klu_cnt(),
-                    'klc_cnt':bi.get_klc_cnt(),
-                } for bi in self.bi_list
-            ])
-    
-            # Convert seg_list to DataFrame
-            dataframes['seg_list'] = pd.DataFrame([
-                {
-                    'begin_time':seg.get_begin_klu().time,
-                    'end_time':seg.get_end_klu().time,
-                    'idx': seg.idx,
-                    'dir': seg.dir,
-                    'high': seg._high(),
-                    'low': seg._low(),
-                    'is_sure': seg.is_sure,
-                    'start_bi_idx': seg.start_bi.idx if seg.start_bi else None,
-                    'end_bi_idx': seg.end_bi.idx if seg.end_bi else None,
-                    'zs_count': len(seg.zs_lst),
-                    'bi_count': len(seg.bi_list),
-                    'reason':seg.reason,
-                } for seg in self.seg_list
-            ])
-    
-            # Convert segseg_list to DataFrame
-            dataframes['seg_seg_list'] = pd.DataFrame([
-                {
-                    'begin_time':segseg.get_begin_klu().time,
-                    'end_time':segseg.get_end_klu().time,                    
-                    'idx': segseg.idx,
-                    'dir': segseg.dir,
-                    'high': segseg._high(),
-                    'low': segseg._low(),
-                    'is_sure': segseg.is_sure,
-                    'start_seg_idx': segseg.start_bi.idx if segseg.start_bi else None,
-                    'end_seg_idx': segseg.end_bi.idx if segseg.end_bi else None,
-                    'zs_count': len(segseg.zs_lst),
-                    'bi_count': len(segseg.bi_list),
-                    'reason':segseg.reason,
-                } for segseg in self.segseg_list
-            ])
-    
-            # Convert zs_list to DataFrame
-            dataframes['zs_list'] = pd.DataFrame([
-                {
-                    #'idx': zs.idx,
-                    #'zs_type': zs.zs_type,
-                    'begin_time': zs.begin_bi.get_begin_klu().time,
-                    'end_time': zs.end_bi.get_end_klu().time,
-                    'high': zs.high,
-                    'low': zs.low,
-                    'peak_high':zs.peak_high,
-                    'peak_low':zs.peak_low,
-                    'is_sure': zs.is_sure,
-                    'begin_bi_idx': zs.begin_bi.idx if zs.begin_bi else None,
-                    'end_bi_idx': zs.end_bi.idx if zs.end_bi else None,
-                    'bi_in':zs.bi_in.idx if zs.bi_in else None,
-                    'bi_out':zs.bi_out.idx if zs.bi_out else None,
-                    'begin_bi_time': zs.begin_bi.get_begin_klu().time if zs.begin_bi else None,
-                    'end_bi_time': zs.end_bi.get_begin_klu().time if zs.end_bi else None,
-                    'bi_in_time':zs.bi_in.get_begin_klu().time if zs.bi_in else None,
-                    'bi_out_time':zs.bi_out.get_begin_klu().time if zs.bi_out else None,
-                } for zs in self.zs_list
-            ])
-    
-            # Convert segzs_list to DataFrame
-            dataframes['seg_zs_list'] = pd.DataFrame([
-                {
-                    #'idx': segzs.idx,
-                    #'zs_type': segzs.zs_type,
-                    #'begin_time': segzs.begin_time,
-                    #'end_time': segzs.end_time,
-                    'begin_time': segzs.begin_bi.get_begin_klu().time,
-                    'end_time': segzs.end_bi.get_end_klu().time,                    
-                    'high': segzs.high,
-                    'low': segzs.low,
-                    'peak_high':segzs.peak_high,
-                    'peak_low':segzs.peak_low,
-                    'is_sure': segzs.is_sure,                    
-                    'begin_seg_idx': segzs.begin_bi.idx if segzs.begin_bi else None,
-                    'end_seg_idx': segzs.end_bi.idx if segzs.end_bi else None,
-                    'bi_in':segzs.bi_in.idx if segzs.bi_in else None,
-                    'bi_out':segzs.bi_out.idx if segzs.bi_out else None,
-                    'begin_bi_time': segzs.begin_bi.get_begin_klu().time if segzs.begin_bi else None,
-                    'end_bi_time': segzs.end_bi.get_begin_klu().time if segzs.end_bi else None,
-                    'bi_in_time':segzs.bi_in.get_begin_klu().time if segzs.bi_in else None,
-                    'bi_out_time':segzs.bi_out.get_begin_klu().time if segzs.bi_out else None,
-                } for segzs in self.segzs_list
-            ])
-    
-            # Convert bs_point_lst to DataFrame
-            dataframes['bs_point_lst'] = pd.DataFrame([
-                {
-                    'begin_time': bsp.klu.time,
-                    #'idx': bsp.idx,
-                    'bsp_type': bsp.type2str(),
-                    'bi_idx': bsp.bi.idx if bsp.bi else None,
-                    'bi_begin_time': bsp.bi.get_begin_klu().time if bsp.bi else None,
-                    'bi_end_time': bsp.bi.get_end_klu().time if bsp.bi else None,
-                    'relate_bsp1_time': bsp.relate_bsp1.klu.time if bsp.relate_bsp1 else None,
-                } for bsp in self.bs_point_lst
-            ])
-    
-            # Convert seg_bs_point_lst to DataFrame
-            dataframes['seg_bs_point_lst'] = pd.DataFrame([
-                {
-                    'begin_time': seg_bsp.klu.time,                    
-                    #'idx': seg_bsp.idx,
-                    'bsp_type': seg_bsp.type2str(),
-                    'seg_idx': seg_bsp.bi.idx if seg_bsp.bi else None,
-                    'bi_begin_time': seg_bsp.bi.get_begin_klu().time if seg_bsp.bi else None,
-                    'bi_end_time': seg_bsp.bi.get_end_klu().time if seg_bsp.bi else None,
-                    'relate_bsp1_time': seg_bsp.relate_bsp1.klu.time if seg_bsp.relate_bsp1 else None,
-                } for seg_bsp in self.seg_bs_point_lst
-            ])
-    
-            # Add historical bs_points
-            dataframes['bs_point_history'] = pd.DataFrame(self.bs_point_history)
+    def to_dataframes(self) -> Dict[str, list]:
+        data_lists = {}
 
-            # Add historical seg_bs_points
-            dataframes['seg_bs_point_history'] = pd.DataFrame(self.seg_bs_point_history)
+        # Convert lst to list
+        data_lists['kline_list'] = [
+            {
+                'begin_time': kl.time_begin,
+                'end_time': kl.time_end,
+                'idx': kl.idx,
+                'dir': kl.dir,
+                'high': kl.high,
+                'low': kl.low,
+                'fx': kl.fx
+            } for kl in self.lst
+        ]
 
-            return dataframes
-    
+        # Convert bi_list to list
+        data_lists['bi_list'] = [
+            {
+                'begin_time': bi.get_begin_klu().time,
+                'end_time': bi.get_end_klu().time,
+                'idx': bi.idx,
+                'dir': bi.dir,
+                'high': bi._high(),
+                'low': bi._low(),
+                'type': bi.type,
+                'is_sure': bi.is_sure,
+                'seg_idx': bi.seg_idx,
+                'parent_seg': bi.parent_seg.idx if bi.parent_seg else None,
+                'begin_klc': bi.begin_klc.idx,
+                'end_klc': bi.end_klc.idx,
+                'begin_val': bi.get_begin_val(),
+                'end_val': bi.get_end_val(),
+                'klu_cnt': bi.get_klu_cnt(),
+                'klc_cnt': bi.get_klc_cnt(),
+            } for bi in self.bi_list
+        ]
+
+        # Convert seg_list to list
+        data_lists['seg_list'] = [
+            {
+                'begin_time': seg.get_begin_klu().time,
+                'end_time': seg.get_end_klu().time,
+                'idx': seg.idx,
+                'dir': seg.dir,
+                'high': seg._high(),
+                'low': seg._low(),
+                'is_sure': seg.is_sure,
+                'start_bi_idx': seg.start_bi.idx if seg.start_bi else None,
+                'end_bi_idx': seg.end_bi.idx if seg.end_bi else None,
+                'zs_count': len(seg.zs_lst),
+                'bi_count': len(seg.bi_list),
+                'reason': seg.reason,
+            } for seg in self.seg_list
+        ]
+
+        # Convert segseg_list to list
+        data_lists['seg_seg_list'] = [
+            {
+                'begin_time': segseg.get_begin_klu().time,
+                'end_time': segseg.get_end_klu().time,
+                'idx': segseg.idx,
+                'dir': segseg.dir,
+                'high': segseg._high(),
+                'low': segseg._low(),
+                'is_sure': segseg.is_sure,
+                'start_seg_idx': segseg.start_bi.idx if segseg.start_bi else None,
+                'end_seg_idx': segseg.end_bi.idx if segseg.end_bi else None,
+                'zs_count': len(segseg.zs_lst),
+                'bi_count': len(segseg.bi_list),
+                'reason': segseg.reason,
+            } for segseg in self.segseg_list
+        ]
+
+        # Convert zs_list to list
+        data_lists['zs_list'] = [
+            {
+                'begin_time': zs.begin_bi.get_begin_klu().time,
+                'end_time': zs.end_bi.get_end_klu().time,
+                'high': zs.high,
+                'low': zs.low,
+                'peak_high': zs.peak_high,
+                'peak_low': zs.peak_low,
+                'is_sure': zs.is_sure,
+                'begin_bi_idx': zs.begin_bi.idx if zs.begin_bi else None,
+                'end_bi_idx': zs.end_bi.idx if zs.end_bi else None,
+                'bi_in': zs.bi_in.idx if zs.bi_in else None,
+                'bi_out': zs.bi_out.idx if zs.bi_out else None,
+                'begin_bi_time': zs.begin_bi.get_begin_klu().time if zs.begin_bi else None,
+                'end_bi_time': zs.end_bi.get_begin_klu().time if zs.end_bi else None,
+                'bi_in_time': zs.bi_in.get_begin_klu().time if zs.bi_in else None,
+                'bi_out_time': zs.bi_out.get_begin_klu().time if zs.bi_out else None,
+                'sub_zs_count': len(zs.sub_zs_lst)
+            } for zs in self.zs_list
+        ]
+
+        # Convert segzs_list to list
+        data_lists['seg_zs_list'] = [
+            {
+                'begin_time': segzs.begin_bi.get_begin_klu().time,
+                'end_time': segzs.end_bi.get_end_klu().time,
+                'high': segzs.high,
+                'low': segzs.low,
+                'peak_high': segzs.peak_high,
+                'peak_low': segzs.peak_low,
+                'is_sure': segzs.is_sure,
+                'begin_seg_idx': segzs.begin_bi.idx if segzs.begin_bi else None,
+                'end_seg_idx': segzs.end_bi.idx if segzs.end_bi else None,
+                'bi_in': segzs.bi_in.idx if segzs.bi_in else None,
+                'bi_out': segzs.bi_out.idx if segzs.bi_out else None,
+                'begin_bi_time': segzs.begin_bi.get_begin_klu().time if segzs.begin_bi else None,
+                'end_bi_time': segzs.end_bi.get_begin_klu().time if segzs.end_bi else None,
+                'bi_in_time': segzs.bi_in.get_begin_klu().time if segzs.bi_in else None,
+                'bi_out_time': segzs.bi_out.get_begin_klu().time if segzs.bi_out else None,
+                'sub_zs_count': len(segzs.sub_zs_lst)
+            } for segzs in self.segzs_list
+        ]
+
+        # Convert bs_point_lst to list
+        data_lists['bs_point_lst'] = [
+            {
+                'begin_time': bsp.klu.time,
+                'bsp_type': bsp.type2str(),
+                'bi_idx': bsp.bi.idx if bsp.bi else None,
+                'bi_begin_time': bsp.bi.get_begin_klu().time if bsp.bi else None,
+                'bi_end_time': bsp.bi.get_end_klu().time if bsp.bi else None,
+                'relate_bsp1_time': bsp.relate_bsp1.klu.time if bsp.relate_bsp1 else None,
+            } for bsp in self.bs_point_lst
+        ]
+
+        # Convert seg_bs_point_lst to list
+        data_lists['seg_bs_point_lst'] = [
+            {
+                'begin_time': seg_bsp.klu.time,
+                'bsp_type': seg_bsp.type2str(),
+                'seg_idx': seg_bsp.bi.idx if seg_bsp.bi else None,
+                'bi_begin_time': seg_bsp.bi.get_begin_klu().time if seg_bsp.bi else None,
+                'bi_end_time': seg_bsp.bi.get_end_klu().time if seg_bsp.bi else None,
+                'relate_bsp1_time': seg_bsp.relate_bsp1.klu.time if seg_bsp.relate_bsp1 else None,
+            } for seg_bsp in self.seg_bs_point_lst
+        ]
+
+        # Add historical bs_points
+        data_lists['bs_point_history'] = self.bs_point_history
+
+        # Add historical seg_bs_points
+        data_lists['seg_bs_point_history'] = self.seg_bs_point_history
+
+        return data_lists
+
     def to_csv(self, directory: str = "output") -> None:
         """
-        将所有的 DataFrame 保存为 CSV 文件。
-
+        将所有的数据列表保存为 CSV 文件。
+        
         :param directory: 保存 CSV 文件的目录，默认为 "output"
         """
         # 确保输出目录存在
         os.makedirs(directory, exist_ok=True)
 
-        # 获取所有的 DataFrame
-        dataframes = self.to_dataframes()
+        # 获取所有的数据列表
+        data_lists = self.to_dataframes()
 
-        # 遍历并保存每个 DataFrame
-        for name, df in dataframes.items():
+        # 遍历并保存每个列表
+        for name, data_list in data_lists.items():
+            if not data_list:  # 跳过空列表
+                continue
+            
             file_path = os.path.join(directory, f"{name}.csv")
-            df.to_csv(file_path, index=False)
-            print(f"Saved {name} to {file_path}")
+            
+            try:
+                with open(file_path, 'w', newline='', encoding='utf-8') as f:
+                    if data_list:
+                        # 获取列名（字典的键）
+                        fieldnames = data_list[0].keys()
+                        
+                        # 创建 CSV writer
+                        writer = csv.DictWriter(f, fieldnames=fieldnames)
+                        
+                        # 写入表头
+                        writer.writeheader()
+                        
+                        # 写入数据
+                        writer.writerows(data_list)
+                        
+                print(f"Saved {name} to {file_path}")
+                
+            except Exception as e:
+                print(f"Error saving {name}: {str(e)}")
 
     def _record_current_bs_points(self):
         # Record only the latest bs_points
