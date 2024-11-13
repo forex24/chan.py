@@ -173,13 +173,14 @@ class CKLine_List:
                 'type': bi.type,
                 'is_sure': bi.is_sure,
                 'seg_idx': bi.seg_idx,
-                'parent_seg': bi.parent_seg.idx if bi.parent_seg else None,
                 'begin_klc': bi.begin_klc.idx,
                 'end_klc': bi.end_klc.idx,
                 'begin_val': bi.get_begin_val(),
                 'end_val': bi.get_end_val(),
                 'klu_cnt': bi.get_klu_cnt(),
                 'klc_cnt': bi.get_klc_cnt(),
+                'parent_seg_idx': bi.parent_seg.idx if bi.parent_seg else None,
+                'parent_seg_dir': bi.parent_seg.dir if bi.parent_seg else None,
             } for bi in self.bi_list
         ]
 
@@ -198,6 +199,8 @@ class CKLine_List:
                 'zs_count': len(seg.zs_lst),
                 'bi_count': len(seg.bi_list),
                 'reason': seg.reason,
+                'parent_seg_idx': seg.parent_seg.idx if seg.parent_seg else None,
+                'parent_seg_dir': seg.parent_seg.dir if seg.parent_seg else None,
             } for seg in self.seg_list
         ]
 
