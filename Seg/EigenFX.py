@@ -147,6 +147,6 @@ class CEigenFX:
             if (bi.is_down() and bi._low() < thred_value) or (bi.is_up() and bi._high() > thred_value):
                 return False
             # 已经两个元素了，且突破了前分形第一元素的极值
-            if egien_fx.ele[1] is not None and ((bi.is_down() and egien_fx.ele[1].high > break_thred) or (bi.is_up() and egien_fx.ele[1].low < break_thred)):
-                return True
+            #if egien_fx.ele[1] is not None and ((bi.is_down() and egien_fx.ele[1].high > break_thred) or (bi.is_up() and egien_fx.ele[1].low < break_thred)):
+            #    return True
         return None
