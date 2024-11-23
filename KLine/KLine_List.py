@@ -377,22 +377,25 @@ class CKLine_List:
     def _record_current_segseg_list(self, clock):
         # Record only the latest bs_points
         if self.segseg_list:
-            last_segseg = self.segseg_list[-1]
-            self.segseg_history.append({
-                'clock': clock,
-                'begin_time': last_segseg.get_begin_klu().time,
-                'end_time': last_segseg.get_end_klu().time,
-                'idx': last_segseg.idx,
-                'dir': last_segseg.dir,
-                'high': last_segseg._high(),
-                'low': last_segseg._low(),
-                'is_sure': last_segseg.is_sure,
-                'start_seg_idx': last_segseg.start_bi.idx if last_segseg.start_bi else None,
-                'end_seg_idx': last_segseg.end_bi.idx if last_segseg.end_bi else None,
-                'zs_count': len(last_segseg.zs_lst),
-                'bi_count': len(last_segseg.bi_list),
-                'reason': last_segseg.reason,
-        })
+            for seg in self.segseg_list[::-1]:
+                if seg.is_sure:
+                    self.segseg_history.append({
+                        'clock': clock,
+                        'end_bi_begin_klu_time':seg.end_bi.get_begin_klu().time,
+                        'begin_time': seg.get_begin_klu().time,
+                        'end_time': seg.get_end_klu().time,
+                        'idx': seg.idx,
+                        'dir': seg.dir,
+                        'high': seg._high(),
+                        'low': seg._low(),
+                        'is_sure': seg.is_sure,
+                        'start_seg_idx': seg.start_bi.idx if seg.start_bi else None,
+                        'end_seg_idx': seg.end_bi.idx if seg.end_bi else None,
+                        'zs_count': len(seg.zs_lst),
+                        'bi_count': len(seg.bi_list),
+                        'reason': seg.reason,
+                    })
+                    return
         
 
 
