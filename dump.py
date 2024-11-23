@@ -256,7 +256,7 @@ def load_config_from_json(json_path: str) -> CChanConfig:
     """
     从JSON文件加载配置
     Args:
-        json_path: JSON配置文件路径
+        json_path: JSON���置文件路径
     Returns:
         CChanConfig对象
     """
@@ -293,9 +293,14 @@ if __name__ == "__main__":
     export_config_to_json(config, config_path)
     dump_config(config)
 
-
+    if os.name == 'posix':
+        root_directory = '/'
+# 对于Windows系统
+    elif os.name == 'nt':
+        root_directory = os.path.splitdrive(os.getcwd())[0] + '\\'
+    default_path = os.path.join(root_directory, 'opt', 'data')
     parser = argparse.ArgumentParser(description='Merge CSV files for symbol analysis.')
-    parser.add_argument('--root', default='/opt/data', help='Root directory for data (default: /opt/data)')
+    parser.add_argument('--root', default=default_path, help='Root directory for data (default: /opt/data)')
     parser.add_argument('--symbol', help='Specific symbol to process (optional)')
     parser.add_argument('--config', help='Path to config JSON file (optional)', default=config_path)
     
