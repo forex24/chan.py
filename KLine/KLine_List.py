@@ -107,7 +107,7 @@ class CKLine_List:
     def __len__(self):
         return len(self.lst)
 
-    def cal_seg_and_zs(self):
+    def cal_seg_and_zs(self, clock=None):
         if not self.step_calculation:
             self.bi_list.try_add_virtual_bi(self.lst[-1])
         cal_seg(self.bi_list, self.seg_list)
@@ -121,12 +121,13 @@ class CKLine_List:
         # 计算买卖点
         self.seg_bs_point_lst.cal(self.seg_list, self.segseg_list)
         self.bs_point_lst.cal(self.bi_list, self.seg_list)
-        self._record_current_bs_points()
+        self._record_current_bs_points(clock)
 
     def need_cal_step_by_step(self):
         return self.config.trigger_step
 
     def add_single_klu(self, klu: CKLine_Unit):
+        clock = klu.time
         klu.set_metric(self.metric_model_lst)
         if len(self.lst) == 0:
             self.lst.append(CKLine(klu, idx=0))
@@ -137,9 +138,9 @@ class CKLine_List:
                 if len(self.lst) >= 3:
                     self.lst[-2].update_fx(self.lst[-3], self.lst[-1])
                 if self.bi_list.update_bi(self.lst[-2], self.lst[-1], self.step_calculation) and self.step_calculation:
-                    self.cal_seg_and_zs()
+                    self.cal_seg_and_zs(clock)
             elif self.step_calculation and self.bi_list.try_add_virtual_bi(self.lst[-1], need_del_end=True):  # 这里的必要性参见issue#175
-                self.cal_seg_and_zs()
+                self.cal_seg_and_zs(clock)
 
     def klu_iter(self, klc_begin_idx=0):
         for klc in self.lst[klc_begin_idx:]:
@@ -337,7 +338,7 @@ class CKLine_List:
             except Exception as e:
                 print(f"Error saving {name}: {str(e)}")
 
-    def _record_current_bs_points(self):
+    def _record_current_bs_points(self, clock):
         # Record only the latest bs_points
         if self.bs_point_lst:
             latest_bsp = self.bs_point_lst[-1]
@@ -349,6 +350,8 @@ class CKLine_List:
                 'bi_idx': latest_bsp.bi.idx if latest_bsp.bi else None,
                 'bi_begin_time': latest_bsp.bi.get_begin_klu().time if latest_bsp.bi else None,
                 'bi_end_time': latest_bsp.bi.get_end_klu().time if latest_bsp.bi else None,
+                'clock': clock if clock else None,
+                'last_sure_pos':self.seg_bs_point_lst.last_sure_pos
             })
 
         # Record only the latest seg_bs_points
@@ -362,6 +365,8 @@ class CKLine_List:
                 'seg_idx': latest_seg_bsp.bi.idx if latest_seg_bsp.bi else None,
                 'bi_begin_time': latest_seg_bsp.bi.get_begin_klu().time if latest_seg_bsp.bi else None,
                 'bi_end_time': latest_seg_bsp.bi.get_end_klu().time if latest_seg_bsp.bi else None,
+                'clock': clock if clock else None,
+                'last_sure_pos':self.seg_bs_point_lst.last_sure_pos
             })
 
 

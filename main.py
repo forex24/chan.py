@@ -3,6 +3,62 @@ from ChanConfig import CChanConfig
 from Common.CEnum import AUTYPE, DATA_SRC, KL_TYPE
 from Plot.AnimatePlotDriver import CAnimateDriver
 from Plot.PlotDriver import CPlotDriver
+import json
+
+def dump_config(config: CChanConfig) -> str:
+    """
+    Dumps the config content as JSON
+    
+    Args:
+        config: CChanConfig instance
+    
+    Returns:
+        str: JSON formatted string of the config
+    """
+    def convert_value(v):
+        """Helper function to convert values to JSON serializable format"""
+        if hasattr(v, 'name'):  # Handle enum types
+            return v.name
+        elif isinstance(v, (str, int, float, bool, type(None))):
+            return v
+        elif isinstance(v, dict):
+            return {k: convert_value(val) for k, val in v.items()}
+        elif isinstance(v, (list, tuple)):
+            return [convert_value(item) for item in v]
+        return str(v)  # Convert any other types to string
+
+    config_dict = {
+        "bi_conf": {
+            "bi_algo": config.bi_conf.bi_algo,
+            "is_strict": config.bi_conf.is_strict,
+            "gap_as_kl": config.bi_conf.gap_as_kl,
+            "bi_end_is_peak": config.bi_conf.bi_end_is_peak,
+            "bi_allow_sub_peak": config.bi_conf.bi_allow_sub_peak,
+            "bi_fx_check": convert_value(config.bi_conf.bi_fx_check)
+        },
+        "seg_conf": {
+            "seg_algo": config.seg_conf.seg_algo,
+            "left_method": convert_value(config.seg_conf.left_method)
+        },
+        "zs_conf": {k: convert_value(v) for k, v in vars(config.zs_conf).items()},
+        "bs_point_conf": {
+            "b_conf": {k: convert_value(v) for k, v in vars(config.bs_point_conf.b_conf).items()} if hasattr(config.bs_point_conf, 'b_conf') else {},
+            "s_conf": {k: convert_value(v) for k, v in vars(config.bs_point_conf.s_conf).items()} if hasattr(config.bs_point_conf, 's_conf') else {}
+        },
+        "seg_bs_point_conf": {
+            "b_conf": {k: convert_value(v) for k, v in vars(config.seg_bs_point_conf.b_conf).items()} if hasattr(config.seg_bs_point_conf, 'b_conf') else {},
+            "s_conf": {k: convert_value(v) for k, v in vars(config.seg_bs_point_conf.s_conf).items()} if hasattr(config.seg_bs_point_conf, 's_conf') else {}
+        },
+    }
+    
+    # Remove any non-serializable objects
+    for section_name, section in config_dict.items():
+        if isinstance(section, dict):
+            for key in list(section.keys()):
+                if not isinstance(section[key], (str, int, float, bool, list, dict, type(None))):
+                    del section[key]
+    
+    return json.dumps(config_dict, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     code = "sz.000001"
@@ -12,56 +68,9 @@ if __name__ == "__main__":
     lv_list = [KL_TYPE.K_DAY]
 
     config = CChanConfig({
-        "bi_strict": True,
-        "trigger_step": False,
-        "skip_step": 0,
-        "divergence_rate": float("inf"),
-        "bsp2_follow_1": False,
-        "bsp3_follow_1": False,
-        "min_zs_cnt": 0,
-        "bs1_peak": False,
-        "macd_algo": "peak",
-        "bs_type": '1,2,3a,1p,2s,3b',
-        "print_warning": True,
-        "zs_algo": "normal",
     })
 
-    plot_config = {
-        "plot_kline": True,
-        "plot_kline_combine": True,
-        "plot_bi": True,
-        "plot_seg": True,
-        "plot_eigen": False,
-        "plot_zs": True,
-        "plot_macd": False,
-        "plot_mean": False,
-        "plot_channel": False,
-        "plot_bsp": True,
-        "plot_extrainfo": False,
-        "plot_demark": False,
-        "plot_marker": False,
-        "plot_rsi": False,
-        "plot_kdj": False,
-    }
 
-    plot_para = {
-        "seg": {
-            # "plot_trendline": True,
-        },
-        "bi": {
-            # "show_num": True,
-            # "disp_end": True,
-        },
-        "figure": {
-            "x_range": 200,
-        },
-        "marker": {
-            # "markers": {  # text, position, color
-            #     '2023/06/01': ('marker here', 'up', 'red'),
-            #     '2023/06/08': ('marker here', 'down')
-            # },
-        }
-    }
     chan = CChan(
         code=code,
         begin_time=begin_time,
@@ -72,16 +81,8 @@ if __name__ == "__main__":
         autype=AUTYPE.QFQ,
     )
 
-    if not config.trigger_step:
-        plot_driver = CPlotDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
-        plot_driver.figure.show()
-    else:
-        CAnimateDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
+
+    json_str = dump_config(config)
+    output_path = 'config_json.dump'
+    with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(json.loads(json_str), f, indent=4, ensure_ascii=False)
