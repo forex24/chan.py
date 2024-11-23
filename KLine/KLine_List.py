@@ -379,6 +379,7 @@ class CKLine_List:
         if self.segseg_list:
             last_segseg = self.segseg_list[-1]
             self.segseg_history.append({
+                'clock': clock,
                 'begin_time': last_segseg.get_begin_klu().time,
                 'end_time': last_segseg.get_end_klu().time,
                 'idx': last_segseg.idx,
