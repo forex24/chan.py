@@ -57,6 +57,7 @@ class CKLine_List:
 
         self.bs_point_history: List[Dict] = []
         self.seg_bs_point_history: List[Dict] = []
+        self.segseg_history: List[Dict] = []
 
     def __deepcopy__(self, memo):
         new_obj = CKLine_List(self.kl_type, self.config)
@@ -93,6 +94,7 @@ class CKLine_List:
         new_obj.seg_bs_point_lst = copy.deepcopy(self.seg_bs_point_lst, memo)
         new_obj.bs_point_history = copy.deepcopy(self.bs_point_history, memo)
         new_obj.seg_bs_point_history = copy.deepcopy(self.seg_bs_point_history, memo)
+        new_obj.segseg_history = copy.deepcopy(self.segseg_history, memo)
         return new_obj
 
     @overload
@@ -122,6 +124,7 @@ class CKLine_List:
         self.seg_bs_point_lst.cal(self.seg_list, self.segseg_list)
         self.bs_point_lst.cal(self.bi_list, self.seg_list)
         self._record_current_bs_points(clock)
+        self._record_current_segseg_list(clock)
 
     def need_cal_step_by_step(self):
         return self.config.trigger_step
@@ -297,6 +300,8 @@ class CKLine_List:
         # Add historical seg_bs_points
         data_lists['seg_bs_point_history'] = self.seg_bs_point_history
 
+        data_lists['segseg_history'] = self.segseg_history
+
         return data_lists
 
     def to_csv(self, directory: str = "output") -> None:
@@ -368,6 +373,26 @@ class CKLine_List:
                 'clock': clock if clock else None,
                 'last_sure_pos':self.seg_bs_point_lst.last_sure_pos
             })
+
+    def _record_current_segseg_list(self, clock):
+        # Record only the latest bs_points
+        if self.segseg_list:
+            last_segseg = self.segseg_list[-1]
+            self.segseg_history.append({
+                'begin_time': last_segseg.get_begin_klu().time,
+                'end_time': last_segseg.get_end_klu().time,
+                'idx': last_segseg.idx,
+                'dir': last_segseg.dir,
+                'high': last_segseg._high(),
+                'low': last_segseg._low(),
+                'is_sure': last_segseg.is_sure,
+                'start_seg_idx': last_segseg.start_bi.idx if last_segseg.start_bi else None,
+                'end_seg_idx': last_segseg.end_bi.idx if last_segseg.end_bi else None,
+                'zs_count': len(last_segseg.zs_lst),
+                'bi_count': len(last_segseg.bi_list),
+                'reason': last_segseg.reason,
+        })
+        
 
 
 def cal_seg(bi_list, seg_list: CSegListComm):
