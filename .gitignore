@@ -6,6 +6,7 @@ __pycache__
 *.db
 *.csv
 *.parquet
+*.png
 *.libsvm
 *.meta
 config.yaml

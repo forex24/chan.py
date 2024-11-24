@@ -13,6 +13,30 @@ def load_csv(filename):
     df['timestamp'] = pd.to_datetime(df['timestamp'])
     return df
 
+def plot(chan):
+    plot_config = {
+        "plot_kline": False,
+        "plot_bi": False,
+        "plot_seg": True,
+        "plot_zs": False,
+        "plot_bsp": False,
+        "plot_segseg":True,
+        "plot_segzs":True,
+	"plot_segbsp":True,
+    }
+    plot_para = {
+        "figure": {
+            "x_range": 10000,
+        },
+    }
+    plot_driver = CPlotDriver(
+        chan,
+        plot_config=plot_config,
+        plot_para=plot_para,
+    )
+    plot_driver.save2img("batch_label.png")
+    #plot_driver.figure.show()
+
 def main(df):
     code = df
     begin_time = None
@@ -84,21 +108,8 @@ def main(df):
         autype=AUTYPE.QFQ,
     )
 
-    if not config.trigger_step:
-        plot_driver = CPlotDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
-        plot_driver.figure.show()
-    else:
-        CAnimateDriver(
-            chan,
-            plot_config=plot_config,
-            plot_para=plot_para,
-        )
+    plot(chan)
 
-    input()
         
 
 if __name__ == "__main__":

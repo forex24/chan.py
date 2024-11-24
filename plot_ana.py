@@ -17,12 +17,12 @@ def plot(chan):
     plot_config = {
         "plot_kline": True,
         "plot_bi": False,
-        "plot_seg": False,
+        "plot_seg": True,
         "plot_zs": False,
         "plot_bsp": False,
         "plot_segseg":True,
         "plot_segzs":True,
-	"plot_segbsp":True,
+	    "plot_segbsp":True,
     }
     plot_para = {
         "figure": {
@@ -34,7 +34,7 @@ def plot(chan):
         plot_config=plot_config,
         plot_para=plot_para,
     )
-    plot_driver.save2img("label.png")
+    plot_driver.save2img("ana_label.png")
     #plot_driver.figure.show()
 
 def main(df):

@@ -381,6 +381,7 @@ class CKLine_List:
                 if seg.is_sure:
                     self.segseg_history.append({
                         'clock': clock,
+                        'segseg_list_len': len(self.segseg_list),
                         'end_bi_begin_klu_time':seg.end_bi.get_begin_klu().time,
                         'begin_time': seg.get_begin_klu().time,
                         'end_time': seg.get_end_klu().time,
